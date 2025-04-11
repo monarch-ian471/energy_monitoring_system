@@ -1,0 +1,20 @@
+# Flutter/Dart
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.idea/
+flutter_app/.gradle/
+flutter_app/android/.gradle/
+flutter_app/android/local.properties
+flutter_app/ios/Runner.xrcworkspace/
+flutter_app/ios/.generated/
+flutter_api/*.iml
+flutter_app/pubspec.lock
+
+# Python
+pi_scripts/__pycache__/
+pi_scripts/*.pvc
+pi_scripts/*.pyo
+
+# General
+*.log
+.DS_Store
