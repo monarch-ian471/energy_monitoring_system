@@ -10,16 +10,21 @@ dependencies:
     sdk: flutter
   http: ^1.2.0
   sqflite: ^2.0.0+4
-  fl_chart: ^0.68.0  # Replace charts_flutter
+  fl_chart: ^1.0.0  # Replace charts_flutter
   pdf: ^3.10.8
   printing: ^5.13.2
   path_provider: ^2.0.9
   path: ^1.8.3
+  syncfusion_flutter_charts: ^29.2.5
+  syncfusion_flutter_core: ^29.2.5
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.2
+  rive: ^0.13.20
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
