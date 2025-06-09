@@ -22,7 +22,7 @@ class EnergyMonitorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EnergySphere',
+      title: 'Energy Monitoring',
       theme: ThemeData(
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: const Color(0xFF0A1F33),
@@ -82,24 +82,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPageChanged: (index) => setState(() => _currentPage = index),
             children: [
               _buildOnboardingPage(
-                  "Welcome to EnergySphere",
+                  "Welcome to Energy Monitor",
                   "Your gateway to smart energy.",
-                  "https://assets5.lottiefiles.com/packages/lf20_jcikoh8b.json",
+                  "assets/animations/energy_welcome.json",
                   Colors.green),
               _buildOnboardingPage(
                   "Master Your Power",
                   "Control every watt with ease.",
-                  "https://assets8.lottiefiles.com/packages/lf20_msdmfng3.json",
-                  Colors.blue),
+                  "assets/animations/master_power.json",
+                  const Color.fromARGB(255, 18, 121, 206)),
               _buildOnboardingPage(
                   "Track & Thrive",
                   "See your energy story unfold.",
-                  "https://assets3.lottiefiles.com/packages/lf20_khwclk6g.json",
+                  "assets/animations/track_thrive.json",
                   Colors.teal),
               _buildOnboardingPage(
                   "Your Energy, Reimagined",
                   "Offline-ready, future-proof.",
-                  "https://assets1.lottiefiles.com/packages/lf20_xlmzkuov.json",
+                  "assets/animations/energy_reimagined.json",
                   Colors.cyan,
                   isLast: true),
             ],
@@ -146,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                             );
                           },
-                          child: const Text("Enter the EnergySphere"),
+                          child: const Text("Enter the Energy Monitor"),
                         ),
                       ],
                     ),
@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // ignore: deprecated_member_use
         color: _currentPage == index
             ? const Color(0xFF4CAF50)
-            : Colors.grey.withOpacity(0.5),
+            : Colors.grey.withAlpha(128),
         borderRadius: BorderRadius.circular(5),
       ),
     );
@@ -270,7 +270,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     await _speech.initialize();
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.speak(
-        "Welcome to EnergySphere, $ownerName. Let’s optimize your energy!");
+        "Welcome to Energy Monitor, $ownerName. Let's optimize your energy!");
   }
 
   static Future<Map<String, dynamic>> _fetchDataIsolate(String url) async {
@@ -395,7 +395,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               width: 40,
               height: 40),
         ),
-        title: const Text("EnergySphere"),
+        title: const Text("Energy Monitor"),
         actions: [
           IconButton(
               icon: const Icon(Icons.mic), onPressed: _listenForCommands),
@@ -403,7 +403,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               icon: const Icon(Icons.print), onPressed: _generatePdfReport),
           Switch(
               value: advancedMode,
-              activeThumbColor: const Color(0xFF4CAF50),
+              activeColor: const Color(0xFF4CAF50),
               onChanged: (value) => setState(() => advancedMode = value)),
         ],
       ),
