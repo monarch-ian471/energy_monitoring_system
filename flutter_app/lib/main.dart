@@ -993,11 +993,11 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     // Data for the graphical line from 0 to currentWatts
     final List<Map<String, dynamic>> zeroToCurrentLine = [
       {
-        'timestamp': minTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'timestamp': minTime.toIso8601String(),
         'watts': 0.0,
       },
       {
-        'timestamp': maxTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'timestamp': maxTime.toIso8601String(),
         'watts': currentWattsValue,
       },
     ];
