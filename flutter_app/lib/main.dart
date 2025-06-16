@@ -425,18 +425,8 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
   void _tallyAchievements() {
     _earnedAchievements.clear();
     if (_score >= 15) _earnedAchievements.add("Eco Warrior");
-    if (_score >= 10 &&
-        _questions
-            .sublist(10, 15)
-            .any((q) => _questions.indexOf(q) < _score)) {
-      _earnedAchievements.add("Peak Saver");
-    }
-    if (_score >= 5 &&
-        _questions
-            .sublist(15, 20)
-            .any((q) => _questions.indexOf(q) < _score)) {
-      _earnedAchievements.add("Solar Star");
-    }
+    if (_score >= 10) _earnedAchievements.add("Peak Saver");
+    if (_score >= 5) _earnedAchievements.add("Solar Star");
     final double percent = _score / _questions.length;
     widget.onAchievementsEarned(_earnedAchievements, percent);
     showDialog(
@@ -876,7 +866,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
             Text("Energy Impact Scorecard",
                 style: Theme.of(context).textTheme.headlineSmall),
             Container(
-              height: constraints.maxWidth > 600 ? 300 : 200,
+              height: constraints.maxWidth > 600 ? 200 : 140,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
@@ -889,36 +879,9 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Your Impact This Week",
-                      style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 120,
-                    width: 120,
-                    child: SfRadialGauge(
-                      axes: [
-                        RadialAxis(
-                          minimum: 0,
-                          maximum: 100,
-                          ranges: [
-                            GaugeRange(startValue: 0, endValue: 50, color: Colors.green),
-                            GaugeRange(startValue: 50, endValue: 75, color: Colors.yellow),
-                            GaugeRange(startValue: 75, endValue: 100, color: Colors.red),
-                          ],
-                          pointers: [NeedlePointer(value: _energyScore * 100, enableAnimation: true)],
-                          annotations: [
-                            GaugeAnnotation(
-                              widget: Text("${(_energyScore * 100).toStringAsFixed(0)}%",
-                                  style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
-                              angle: 90,
-                              positionFactor: 0.5,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                  // const Text("Your Impact This Week",
+                  //     style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
+                  // const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -999,6 +962,46 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       }
     });
 
+    // Prepare a line from 0 to currentWatts for the graphical line
+    double currentWattsValue = 0.0;
+    try {
+      currentWattsValue = double.tryParse(currentWatts) ?? 0.0;
+    } catch (_) {
+      currentWattsValue = 0.0;
+    }
+
+    // The x-axis for this line will be from the earliest to the latest timestamp
+    DateTime? minTime, maxTime;
+    if (sortedHistory.isNotEmpty) {
+      try {
+        minTime = DateTime.parse(sortedHistory.first['timestamp']);
+        maxTime = DateTime.parse(sortedHistory.last['timestamp']);
+      } catch (_) {
+        minTime = DateTime.now();
+        maxTime = DateTime.now();
+      }
+    } else {
+      minTime = DateTime.now();
+      maxTime = DateTime.now();
+    }
+
+    // If minTime == maxTime, add 1 hour to maxTime to avoid chart errors
+    if (minTime == maxTime) {
+      maxTime = minTime.add(const Duration(hours: 1));
+    }
+
+    // Data for the graphical line from 0 to currentWatts
+    final List<Map<String, dynamic>> zeroToCurrentLine = [
+      {
+        'timestamp': minTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'watts': 0.0,
+      },
+      {
+        'timestamp': maxTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'watts': currentWattsValue,
+      },
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -1020,6 +1023,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       majorGridLines: const MajorGridLines(width: 0.5),
                     ),
                     series: [
+                      // Main energy history spline
                       SplineSeries<Map<String, dynamic>, DateTime>(
                         dataSource: sortedHistory,
                         xValueMapper: (data, _) {
@@ -1041,6 +1045,29 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                         enableTooltip: true,
                         markerSettings: const MarkerSettings(isVisible: true),
                       ),
+                      // Graphical line from 0 to currentWatts
+                      LineSeries<Map<String, dynamic>, DateTime>(
+                        dataSource: zeroToCurrentLine,
+                        xValueMapper: (data, _) {
+                          try {
+                            return DateTime.parse(data['timestamp']);
+                          } catch (e) {
+                            return DateTime.now();
+                          }
+                        },
+                        yValueMapper: (data, _) {
+                          var watts = data['watts'];
+                          if (watts is int) return watts.toDouble();
+                          if (watts is double) return watts;
+                          if (watts is String) return double.tryParse(watts) ?? 0.0;
+                          return 0.0;
+                        },
+                        color: Colors.orange,
+                        width: 3,
+                        dashArray: <double>[6, 3],
+                        markerSettings: const MarkerSettings(isVisible: false),
+                        name: "Current Watts Line",
+                      ),
                     ],
                     zoomPanBehavior: ZoomPanBehavior(
                       enablePinching: true,
@@ -1048,6 +1075,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       zoomMode: ZoomMode.xy,
                     ),
                     tooltipBehavior: TooltipBehavior(enable: true),
+                    legend: Legend(isVisible: false),
                   )
                 : const Center(
                     child: Text("No history data available.",
