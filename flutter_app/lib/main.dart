@@ -11,6 +11,14 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:intl/intl.dart'; // For date formatting
+
+// Toggle for dummy data (uses Postman mock server when true)
+const bool useDummyData = true;
+// Configurable API base URL (switches to mock server for dummy data)
+const String apiBaseUrl = useDummyData
+    ? 'https://5ed82b73-5ed4-4c32-99b2-47b88a17336d.mock.pstmn.io'
+    : 'http://172.20.10.2:8000';
 
 void main() {
   runApp(const EnergyMonitorApp());
@@ -59,7 +67,7 @@ class EnergyMonitorApp extends StatelessWidget {
   }
 }
 
-// Onboarding Screen
+// Onboarding Screen (unchanged)
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
 
@@ -173,8 +181,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          // ignore: deprecated_member_use
-          colors: [color.withOpacity(0.8), const Color(0xFF0A1F33)],
+          colors: [color.withAlpha(204), const Color(0xFF0A1F33)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -207,11 +214,316 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       width: _currentPage == index ? 14 : 10,
       height: 10,
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: _currentPage == index
             ? const Color(0xFF4CAF50)
             : Colors.grey.withAlpha(128),
         borderRadius: BorderRadius.circular(5),
+      ),
+    );
+  }
+}
+
+class EnergyChallengeScreen extends StatefulWidget {
+  final Function(List<String> achievements, double score) onAchievementsEarned;
+  const EnergyChallengeScreen({Key? key, required this.onAchievementsEarned})
+      : super(key: key);
+
+  @override
+  State<EnergyChallengeScreen> createState() => _EnergyChallengeScreenState();
+}
+
+class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
+  final List<Map<String, dynamic>> _questions = [
+    {
+      "question":
+          "What is the most energy-efficient time to use heavy appliances?",
+      "options": [
+        "During peak hours",
+        "During off-peak hours",
+        "At noon",
+        "Anytime"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "Which bulb uses the least energy?",
+      "options": ["Incandescent", "Halogen", "LED", "CFL"],
+      "answer": 2,
+    },
+    {
+      "question": "What does a smart meter do?",
+      "options": [
+        "Measures water usage",
+        "Measures energy usage in real time",
+        "Cools your house",
+        "Charges your phone"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "What is a phantom load?",
+      "options": [
+        "Energy used by appliances when off",
+        "Energy from solar panels",
+        "Wind energy",
+        "None of the above"
+      ],
+      "answer": 0,
+    },
+    {
+      "question": "Which is a renewable energy source?",
+      "options": ["Coal", "Natural Gas", "Solar", "Oil"],
+      "answer": 2,
+    },
+    {
+      "question": "What is the best way to reduce AC energy use?",
+      "options": [
+        "Open windows during the day",
+        "Set thermostat higher",
+        "Run all day",
+        "Block vents"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "What is net metering?",
+      "options": [
+        "Paying for internet",
+        "Selling excess solar energy back to the grid",
+        "Measuring water",
+        "None of the above"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "Which appliance uses the most energy at home?",
+      "options": ["Refrigerator", "TV", "Microwave", "Washing Machine"],
+      "answer": 0,
+    },
+    {
+      "question": "What is the benefit of unplugging chargers?",
+      "options": [
+        "Saves energy",
+        "Makes phone charge faster",
+        "No benefit",
+        "Damages charger"
+      ],
+      "answer": 0,
+    },
+    {
+      "question": "What is the main cause of peak energy demand?",
+      "options": [
+        "People sleeping",
+        "Simultaneous use of many appliances",
+        "Rainy weather",
+        "Solar panels"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "Which of these is NOT a renewable energy source?",
+      "options": ["Wind", "Hydro", "Natural Gas", "Solar"],
+      "answer": 2,
+    },
+    {
+      "question": "What does Energy Star label mean?",
+      "options": [
+        "High energy use",
+        "Energy efficient product",
+        "Expensive product",
+        "Old product"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "What is the best way to save energy with lighting?",
+      "options": [
+        "Use more lamps",
+        "Use LED bulbs",
+        "Leave lights on",
+        "Use candles"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "What is a solar inverter?",
+      "options": [
+        "Converts DC to AC",
+        "Stores energy",
+        "Cools solar panels",
+        "Measures sunlight"
+      ],
+      "answer": 0,
+    },
+    {
+      "question": "What is the best temperature to set your fridge?",
+      "options": ["0°C", "4°C (39°F)", "10°C", "20°C"],
+      "answer": 1,
+    },
+    {
+      "question": "Which is a peak saving behavior?",
+      "options": [
+        "Run dishwasher at 7pm",
+        "Run dishwasher at 11pm",
+        "Run dishwasher at 6pm",
+        "Run dishwasher at 8am"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "What is the main benefit of solar panels?",
+      "options": ["Lower energy bills", "More heat", "More noise", "None"],
+      "answer": 0,
+    },
+    {
+      "question": "What is a kilowatt-hour?",
+      "options": [
+        "A measure of power",
+        "A measure of energy",
+        "A measure of time",
+        "A measure of voltage"
+      ],
+      "answer": 1,
+    },
+    {
+      "question": "Which is a solar energy achievement?",
+      "options": [
+        "Using solar panels",
+        "Using more gas",
+        "Using more coal",
+        "None"
+      ],
+      "answer": 0,
+    },
+    {
+      "question": "What is the best way to reduce standby power?",
+      "options": [
+        "Unplug devices",
+        "Use more devices",
+        "Leave everything plugged in",
+        "Use old appliances"
+      ],
+      "answer": 0,
+    },
+  ];
+
+  int _currentQuestion = 0;
+  int _score = 0;
+  List<String> _earnedAchievements = [];
+
+  void _answer(int selected) {
+    final correct = _questions[_currentQuestion]['answer'] as int;
+    if (selected == correct) _score++;
+    setState(() {
+      _currentQuestion++;
+    });
+    if (_currentQuestion == _questions.length) {
+      _tallyAchievements();
+    }
+  }
+
+  void _tallyAchievements() {
+    _earnedAchievements.clear();
+    if (_score >= 15) _earnedAchievements.add("Eco Warrior");
+    if (_score >= 10 &&
+        _questions
+            .sublist(10, 15)
+            .any((q) => _questions.indexOf(q) < _score)) {
+      _earnedAchievements.add("Peak Saver");
+    }
+    if (_score >= 5 &&
+        _questions
+            .sublist(15, 20)
+            .any((q) => _questions.indexOf(q) < _score)) {
+      _earnedAchievements.add("Solar Star");
+    }
+    final double percent = _score / _questions.length;
+    widget.onAchievementsEarned(_earnedAchievements, percent);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Challenge Complete!"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("You scored $_score out of ${_questions.length}."),
+            const SizedBox(height: 10),
+            const Text("Achievements Earned:"),
+            const SizedBox(height: 5),
+            Wrap(
+              spacing: 8,
+              children: _earnedAchievements.isEmpty
+                  ? [const Text("None")]
+                  : _earnedAchievements
+                      .map((a) => Chip(label: Text(a)))
+                      .toList(),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Return"),
+          ),
+        ],
+      ),
+    ).then((_) => Navigator.pop(context));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_currentQuestion >= _questions.length) {
+      return const Center(child: Text("Challenge Complete!"));
+    }
+    final q = _questions[_currentQuestion];
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Energy Challenge"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LinearProgressIndicator(
+              value: (_currentQuestion + 1) / _questions.length,
+              minHeight: 8,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.orange),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "Question ${_currentQuestion + 1} of ${_questions.length}",
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              q['question'],
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ...List.generate(
+              (q['options'] as List).length,
+              (i) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                child: ElevatedButton(
+                  onPressed: () => _answer(i),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  child: Text(q['options'][i]),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -234,7 +546,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   String ownerName = "";
   Database? database;
   bool advancedMode = false;
-  bool _isFetching = false;
+  bool _isFetching = true; // Start with fetching true to show loading
   int _currentIndex = 0;
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
@@ -246,7 +558,12 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     super.initState();
     ownerName = widget.initialName;
     _initDatabase();
-    _fetchData();
+    _fetchData().then((_) {
+      if (mounted) setState(() => _isFetching = false); // Update only if mounted
+    }).catchError((e) {
+      print('Fetch Error: $e');
+      if (mounted) setState(() => _isFetching = false); // Handle error state
+    });
     _initSpeech();
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1000))
@@ -273,65 +590,85 @@ class _EnergyDashboardState extends State<EnergyDashboard>
         "Welcome to Energy Monitor, $ownerName. Let's optimize your energy!");
   }
 
-  static Future<Map<String, dynamic>> _fetchDataIsolate(String url) async {
+  static Future<dynamic> _fetchDataIsolate(String url) async {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      try {
+        final decoded = jsonDecode(response.body);
+        return decoded is Map<String, dynamic> ? decoded : {'error': 'Invalid response format'};
+      } catch (e) {
+        return {'error': 'Failed to parse JSON: $e'};
+      }
     }
-    throw Exception('Failed to fetch data');
+    return {'error': 'Failed to fetch data from $url, status: ${response.statusCode}'};
   }
 
   Future<void> _fetchData() async {
-    if (_isFetching) return;
-    setState(() => _isFetching = true);
-
     try {
       final results = await Future.wait([
-        compute(_fetchDataIsolate, 'http://172.20.10.2:8000/energy'),
-        compute(_fetchDataIsolate, 'http://172.20.10.2:8000/energy/history'),
+        compute(_fetchDataIsolate, '$apiBaseUrl/energy'),
+        compute(_fetchDataIsolate, '$apiBaseUrl/energy/history'),
       ]);
 
       final latest = results[0];
       final historyData = results[1];
 
-      if (latest.containsKey('error'))
-        throw Exception('No data available from /energy');
-      if (historyData.containsKey('error'))
-        throw Exception('No history data available');
+      print('API Response /energy: $latest'); // Debug log
+      print('API Response /history: $historyData'); // Debug log
+
+      if (latest is! Map<String, dynamic> || latest.containsKey('error')) {
+        throw Exception('Invalid or error response from /energy: $latest');
+      }
+      if (historyData is! Map<String, dynamic> || historyData.containsKey('error')) {
+        throw Exception('Invalid or error response from history: $historyData');
+      }
+
+      if (!latest.containsKey('watts')) {
+        throw Exception('No watts data in /energy response: $latest');
+      }
 
       setState(() {
-        currentWatts = latest['watts'].toStringAsFixed(2);
-        history = List<Map<String, dynamic>>.from(historyData as Iterable);
+        currentWatts = (latest['watts'] as num).toStringAsFixed(2);
+        history = (historyData['data'] as List?)?.map<Map<String, dynamic>>((item) {
+          if (item is Map<String, dynamic> && item.containsKey('watts') && item.containsKey('timestamp')) {
+            var watts = item['watts'];
+            if (watts is int) watts = watts.toDouble();
+            return {'timestamp': item['timestamp'], 'watts': watts};
+          }
+          return {};
+        }).where((e) => e.isNotEmpty).toList() ?? [];
       });
 
       await database?.delete('cache');
       for (var item in history) {
-        await database?.insert(
-            'cache', {'timestamp': item['timestamp'], 'watts': item['watts']});
+        await database?.insert('cache', {'timestamp': item['timestamp'], 'watts': item['watts']});
       }
     } catch (e) {
-      final cachedData =
-          await database?.query('cache', orderBy: 'timestamp DESC', limit: 24);
-      if (cachedData != null && mounted) {
+      print('API Error: $e'); // Debug log
+      final cachedData = await database?.query('cache', orderBy: 'timestamp DESC', limit: 24);
+      if (cachedData != null) {
         setState(() {
           history = cachedData
               .map((e) => {
                     'timestamp': e['timestamp'] as String,
-                    'watts': e['watts'] as double
+                    'watts': e['watts'] is int ? (e['watts'] as int).toDouble() : e['watts'] as double,
                   })
               .toList();
-          currentWatts = history.isNotEmpty
-              ? history.first['watts'].toStringAsFixed(2)
-              : "Offline";
+          currentWatts = history.isNotEmpty ? history.first['watts'].toStringAsFixed(2) : "Offline";
+        });
+      } else {
+        // Fallback to dummy data if no cache
+        setState(() {
+          history = [
+            {'timestamp': DateTime.now().toIso8601String(), 'watts': 43.0}, // Match API response
+          ];
+          currentWatts = "43.00"; // Match API response
         });
       }
-    } finally {
-      if (mounted) setState(() => _isFetching = false);
     }
   }
 
   Future<void> _generatePdfReport() async {
-    // Placeholder for PDF generation
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text("PDF Report Generated!")));
   }
@@ -374,6 +711,9 @@ class _EnergyDashboardState extends State<EnergyDashboard>
             : "Good Evening";
 
     Widget getCurrentPage() {
+      if (_isFetching) {
+        return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+      }
       switch (_currentIndex) {
         case 0:
           return _buildHomePage(greeting);
@@ -533,22 +873,85 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               ),
             ),
             const SizedBox(height: 30),
-            Text("Energy Globe",
+            Text("Energy Impact Scorecard",
                 style: Theme.of(context).textTheme.headlineSmall),
             Container(
-              height: constraints.maxWidth > 600 ? 400 : 300,
+              height: constraints.maxWidth > 600 ? 300 : 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                gradient: const RadialGradient(
+                gradient: const LinearGradient(
                   colors: [Color(0xFF4CAF50), Color(0xFF0A1F33)],
-                  center: Alignment.center,
-                  radius: 0.8,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-              child: Lottie.network(
-                  'https://assets2.lottiefiles.com/packages/lf20_0xql38ob.json',
-                  fit: BoxFit.contain),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Your Impact This Week",
+                      style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 120,
+                    width: 120,
+                    child: SfRadialGauge(
+                      axes: [
+                        RadialAxis(
+                          minimum: 0,
+                          maximum: 100,
+                          ranges: [
+                            GaugeRange(startValue: 0, endValue: 50, color: Colors.green),
+                            GaugeRange(startValue: 50, endValue: 75, color: Colors.yellow),
+                            GaugeRange(startValue: 75, endValue: 100, color: Colors.red),
+                          ],
+                          pointers: [NeedlePointer(value: _energyScore * 100, enableAnimation: true)],
+                          annotations: [
+                            GaugeAnnotation(
+                              widget: Text("${(_energyScore * 100).toStringAsFixed(0)}%",
+                                  style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold)),
+                              angle: 90,
+                              positionFactor: 0.5,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Card(
+                        color: Colors.green[700],
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              const Text("Saved Today", style: TextStyle(color: Colors.white)),
+                              Text("${(150 - (double.tryParse(currentWatts) ?? 0.0)).toStringAsFixed(2)} W",
+                                  style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Card(
+                        color: Colors.blue[700],
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              const Text("Total Savings", style: TextStyle(color: Colors.white)),
+                              Text("${(history.isNotEmpty ? history.fold<double>(0.0, (sum, e) => sum + ((e['watts'] is num) ? (e['watts'] as num).toDouble() : 0.0)) / history.length : 0.0).toStringAsFixed(2)} W",
+                                  style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 30),
             ExpansionTile(
@@ -585,6 +988,17 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   }
 
   Widget _buildHistoryPage() {
+    // Sort history by timestamp ascending for proper chart display
+    List<Map<String, dynamic>> sortedHistory = List.from(history);
+    sortedHistory.sort((a, b) {
+      try {
+        return DateTime.parse(a['timestamp'])
+            .compareTo(DateTime.parse(b['timestamp']));
+      } catch (_) {
+        return 0;
+      }
+    });
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -594,19 +1008,34 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
           Expanded(
-            child: history.isEmpty
-                ? Center(
-                    child: Lottie.network(
-                        'https://assets6.lottiefiles.com/packages/lf20_8qetzdep.json',
-                        width: 200))
-                : SfCartesianChart(
-                    primaryXAxis: DateTimeAxis(),
+            child: sortedHistory.isNotEmpty
+                ? SfCartesianChart(
+                    primaryXAxis: DateTimeAxis(
+                      dateFormat: DateFormat.Hm(),
+                      intervalType: DateTimeIntervalType.hours,
+                      majorGridLines: const MajorGridLines(width: 0.5),
+                    ),
+                    primaryYAxis: NumericAxis(
+                      title: AxisTitle(text: "Watts"),
+                      majorGridLines: const MajorGridLines(width: 0.5),
+                    ),
                     series: [
                       SplineSeries<Map<String, dynamic>, DateTime>(
-                        dataSource: history,
-                        xValueMapper: (data, _) =>
-                            DateTime.parse(data['timestamp']),
-                        yValueMapper: (data, _) => data['watts'],
+                        dataSource: sortedHistory,
+                        xValueMapper: (data, _) {
+                          try {
+                            return DateTime.parse(data['timestamp']);
+                          } catch (e) {
+                            return DateTime.now(); // Fallback to current time if parsing fails
+                          }
+                        },
+                        yValueMapper: (data, _) {
+                          var watts = data['watts'];
+                          if (watts is int) return watts.toDouble();
+                          if (watts is double) return watts;
+                          if (watts is String) return double.tryParse(watts) ?? 0.0;
+                          return 0.0; // Default to 0 if no valid watts
+                        },
                         color: const Color(0xFF4CAF50),
                         animationDuration: 1000,
                         enableTooltip: true,
@@ -618,19 +1047,23 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       enablePanning: true,
                       zoomMode: ZoomMode.xy,
                     ),
-                  ),
+                    tooltipBehavior: TooltipBehavior(enable: true),
+                  )
+                : const Center(
+                    child: Text("No history data available.",
+                        style: TextStyle(color: Colors.white70, fontSize: 18))),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: null, // Disabled until implemented
                 child: const Text("Day View"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: null, // Disabled until implemented
                 child: const Text("Week View"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               ),
@@ -651,6 +1084,62 @@ class _EnergyDashboardState extends State<EnergyDashboard>
             Text("Energy Profile",
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 20),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _loadProfiles(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final profiles = snapshot.data!;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    DropdownButton<String>(
+                      value: ownerName.isNotEmpty
+                          ? ownerName
+                          : (profiles.isNotEmpty ? profiles[0]['name'] : null),
+                      hint: const Text("Select Profile",
+                          style: TextStyle(color: Colors.white)),
+                      dropdownColor: const Color(0xFF2A3555),
+                      items: profiles.map((profile) {
+                        return DropdownMenuItem<String>(
+                          value: profile['name'],
+                          child: Text(profile['name'],
+                              style: const TextStyle(color: Colors.white)),
+                        );
+                      }).toList(),
+                      onChanged: (value) async {
+                        if (value != null) {
+                          final selected =
+                              profiles.firstWhere((p) => p['name'] == value);
+                          setState(() {
+                            ownerName = selected['name'];
+                            _avatarImage = selected['avatarPath'] != null &&
+                                    selected['avatarPath'].isNotEmpty
+                                ? File(selected['avatarPath'])
+                                : null;
+                            _achievements =
+                                List<String>.from(selected['achievements'] ?? []);
+                            _energyScore = selected['energyScore'] ?? 0.0;
+                          });
+                        }
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      onPressed: () async {
+                        final newProfile = await _showCreateProfileDialog();
+                        if (newProfile != null) {
+                          await _saveProfile(newProfile);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
             Center(
               child: GestureDetector(
                 onTap: _pickAvatar,
@@ -659,10 +1148,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                   backgroundImage:
                       _avatarImage != null ? FileImage(_avatarImage!) : null,
                   child: _avatarImage == null
-                      ? Lottie.network(
-                          'https://assets10.lottiefiles.com/packages/lf20_khwclk6g.json',
-                          width: 120,
-                          height: 120)
+                      ? const Icon(Icons.person, size: 60, color: Colors.grey)
                       : null,
                 ),
               ),
@@ -679,7 +1165,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                   children: [
                     Text("Name: $ownerName",
                         style: const TextStyle(
-                            fontSize: 22, color: Color(0xFFE0E7FF))),
+                            fontSize: 22, color: Color.fromARGB(255, 6, 6, 6))),
                     const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -687,7 +1173,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                         const Text("Energy Score",
                             style: TextStyle(
                                 fontSize: 18, color: Color(0xFF4CAF50))),
-                        Text("92%",
+                        Text("${(_energyScore * 100).toStringAsFixed(0)}%",
                             style: const TextStyle(
                                 fontSize: 18,
                                 color: Color(0xFF4CAF50),
@@ -696,10 +1182,10 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                     ),
                     const SizedBox(height: 10),
                     LinearProgressIndicator(
-                      value: 0.92,
+                      value: _energyScore,
                       backgroundColor: Colors.grey[300],
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF4CAF50)),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
                       minHeight: 10,
                     ),
                     const SizedBox(height: 20),
@@ -712,15 +1198,12 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                     Wrap(
                       spacing: 10,
                       children: [
-                        Chip(
-                            label: const Text("Eco Warrior"),
-                            backgroundColor: Colors.green[700]),
-                        Chip(
-                            label: const Text("Peak Saver"),
-                            backgroundColor: Colors.blue[700]),
-                        Chip(
-                            label: const Text("Solar Star"),
-                            backgroundColor: Colors.yellow[700]),
+                        _buildAchievementChip("Eco Warrior", Colors.green[700]!,
+                            _achievements.contains("Eco Warrior")),
+                        _buildAchievementChip("Peak Saver", Colors.blue[700]!,
+                            _achievements.contains("Peak Saver")),
+                        _buildAchievementChip("Solar Star", Colors.yellow[700]!,
+                            _achievements.contains("Solar Star")),
                       ],
                     ),
                   ],
@@ -729,13 +1212,126 @@ class _EnergyDashboardState extends State<EnergyDashboard>
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EnergyChallengeScreen(
+                      onAchievementsEarned: (earned, score) async {
+                        setState(() {
+                          for (final a in earned) {
+                            if (!_achievements.contains(a)) _achievements.add(a);
+                          }
+                          _energyScore = score;
+                        });
+                        await _updateCurrentProfile();
+                      },
+                    ),
+                  ),
+                );
+              },
               child: const Text("Take Energy Challenge"),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  List<String> _achievements = [];
+  double _energyScore = 0.92;
+
+  Future<List<Map<String, dynamic>>> _loadProfiles() async {
+    final file = File('${(await getDatabasesPath())}/profiles.json');
+    if (!await file.exists()) {
+      await file.writeAsString(jsonEncode([
+        {
+          "name": "John Doe",
+          "avatarPath": "",
+          "achievements": ["Eco Warrior"],
+          "energyScore": 0.85
+        },
+        {
+          "name": "Jane Smith",
+          "avatarPath": "",
+          "achievements": ["Peak Saver", "Solar Star"],
+          "energyScore": 0.92
+        }
+      ]));
+    }
+    final content = await file.readAsString();
+    return List<Map<String, dynamic>>.from(jsonDecode(content));
+  }
+
+  Future<void> _saveProfile(Map<String, dynamic> profile) async {
+    final file = File('${(await getDatabasesPath())}/profiles.json');
+    List<Map<String, dynamic>> profiles = [];
+    if (await file.exists()) {
+      profiles =
+          List<Map<String, dynamic>>.from(jsonDecode(await file.readAsString()));
+    }
+    profiles.add(profile);
+    await file.writeAsString(jsonEncode(profiles));
+  }
+
+  Future<void> _updateCurrentProfile() async {
+    final file = File('${(await getDatabasesPath())}/profiles.json');
+    if (!await file.exists()) return;
+    final profiles =
+        List<Map<String, dynamic>>.from(jsonDecode(await file.readAsString()));
+    final idx = profiles.indexWhere((p) => p['name'] == ownerName);
+    if (idx != -1) {
+      profiles[idx]['achievements'] = _achievements;
+      profiles[idx]['energyScore'] = _energyScore;
+      profiles[idx]['avatarPath'] = _avatarImage?.path ?? "";
+      await file.writeAsString(jsonEncode(profiles));
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showCreateProfileDialog() async {
+    String newName = "";
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Create New Profile"),
+          content: TextField(
+            decoration: const InputDecoration(hintText: "Enter name"),
+            onChanged: (val) => newName = val,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                if (newName.trim().isEmpty) return;
+                Navigator.pop(context, {
+                  "name": newName.trim(),
+                  "avatarPath": "",
+                  "achievements": [],
+                  "energyScore": 0.0,
+                });
+              },
+              child: const Text("Create"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAchievementChip(String label, Color color, bool achieved) {
+    return Chip(
+      label: Text(label,
+          style:
+              TextStyle(color: achieved ? Colors.white : Colors.white54)),
+      backgroundColor: achieved ? color : color.withAlpha(77),
+      avatar: achieved
+          ? const Icon(Icons.check_circle, color: Colors.white, size: 20)
+          : const Icon(Icons.lock_outline, color: Colors.white54, size: 20),
     );
   }
 
