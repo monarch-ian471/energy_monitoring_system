@@ -12,13 +12,142 @@ import 'package:lottie/lottie.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:intl/intl.dart'; // For date formatting
+import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 // Toggle for dummy data (uses Postman mock server when true)
 const bool useDummyData = true;
 // Configurable API base URL (switches to mock server for dummy data)
 const String apiBaseUrl = useDummyData
     ? 'https://5ed82b73-5ed4-4c32-99b2-47b88a17336d.mock.pstmn.io'
-    : 'http://172.20.10.2:8000';
+    : 'http://localhost:8000';
+
+// Theme Provider
+class ThemeProvider extends ChangeNotifier {
+  bool _isDarkMode = true; // Default to dark mode
+
+  bool get isDarkMode => _isDarkMode;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+
+  ThemeData get themeData {
+    if (_isDarkMode) {
+      return _darkTheme;
+    } else {
+      return _lightTheme;
+    }
+  }
+
+  // Dark Theme
+  static final ThemeData _darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.green,
+    scaffoldBackgroundColor: const Color(0xFF0A1F33),
+    textTheme: const TextTheme(
+      bodyMedium: TextStyle(color: Color(0xFFE0E7FF), fontSize: 16),
+      headlineSmall: TextStyle(
+          color: Color(0xFF4CAF50),
+          fontWeight: FontWeight.bold,
+          fontSize: 24),
+      headlineMedium: TextStyle(
+          color: Colors.white, fontWeight: FontWeight.bold, fontSize: 32),
+    ),
+    cardColor: const Color(0xFF1E2A44),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF4CAF50),
+        foregroundColor: Colors.white,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+        elevation: 8,
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF0A1F33),
+      elevation: 0,
+      iconTheme: IconThemeData(color: Color(0xFFE0E7FF)),
+      titleTextStyle: TextStyle(
+          color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF1E2A44),
+      selectedItemColor: Color(0xFF4CAF50),
+      unselectedItemColor: Colors.white70,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF4CAF50);
+        }
+        return Colors.grey;
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF4CAF50).withValues(alpha: 0.5);
+        }
+        return Colors.grey.withValues(alpha: 0.5);
+      }),
+    ),
+  );
+
+  // Light Theme
+  static final ThemeData _lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primarySwatch: Colors.green,
+    scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+    textTheme: const TextTheme(
+      bodyMedium: TextStyle(color: Color(0xFF2C3E50), fontSize: 16),
+      headlineSmall: TextStyle(
+          color: Color(0xFF4CAF50),
+          fontWeight: FontWeight.bold,
+          fontSize: 24),
+      headlineMedium: TextStyle(
+          color: Color(0xFF2C3E50), fontWeight: FontWeight.bold, fontSize: 32),
+    ),
+    cardColor: Colors.white,
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF4CAF50),
+        foregroundColor: Colors.white,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+        elevation: 4,
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF4CAF50),
+      elevation: 2,
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+          color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: Color(0xFF4CAF50),
+      unselectedItemColor: Colors.grey,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF4CAF50);
+        }
+        return Colors.grey;
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF4CAF50).withValues(alpha: 0.5);
+        }
+        return Colors.grey.withValues(alpha: 0.5);
+      }),
+    ),
+  );
+}
 
 void main() {
   runApp(const EnergyMonitorApp());
@@ -29,40 +158,17 @@ class EnergyMonitorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Energy Monitoring',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-        scaffoldBackgroundColor: const Color(0xFF0A1F33),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Color(0xFFE0E7FF), fontSize: 16),
-          headlineSmall: TextStyle(
-              color: Color(0xFF4CAF50),
-              fontWeight: FontWeight.bold,
-              fontSize: 24),
-          headlineMedium: TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 32),
-        ),
-        cardColor: const Color(0xFF1E2A44),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            elevation: 8,
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0A1F33),
-          elevation: 0,
-          iconTheme: IconThemeData(color: Color(0xFFE0E7FF)),
-          titleTextStyle: TextStyle(
-              color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-        ),
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Energy Monitoring',
+            theme: themeProvider.themeData,
+            home: const OnboardingScreen(),
+          );
+        },
       ),
-      home: const OnboardingScreen(),
     );
   }
 }
@@ -82,106 +188,129 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentPage = index),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          body: Stack(
             children: [
-              _buildOnboardingPage(
-                  "Welcome to Energy Monitor",
-                  "Your gateway to smart energy.",
-                  "assets/animations/energy_welcome.json",
-                  Colors.green),
-              _buildOnboardingPage(
-                  "Master Your Power",
-                  "Control every watt with ease.",
-                  "assets/animations/master_power.json",
-                  const Color.fromARGB(255, 18, 121, 206)),
-              _buildOnboardingPage(
-                  "Track & Thrive",
-                  "See your energy story unfold.",
-                  "assets/animations/track_thrive.json",
-                  Colors.teal),
-              _buildOnboardingPage(
-                  "Your Energy, Reimagined",
-                  "Offline-ready, future-proof.",
-                  "assets/animations/energy_reimagined.json",
-                  Colors.cyan,
-                  isLast: true),
+              PageView(
+                controller: _pageController,
+                onPageChanged: (index) => setState(() => _currentPage = index),
+                children: [
+                  _buildOnboardingPage(
+                      "Welcome to Energy Monitor",
+                      "Your gateway to smart energy.",
+                      "assets/animations/energy_welcome.json",
+                      Colors.green,
+                      themeProvider),
+                  _buildOnboardingPage(
+                      "Master Your Power",
+                      "Control every watt with ease.",
+                      "assets/animations/master_power.json",
+                      const Color.fromARGB(255, 18, 121, 206),
+                      themeProvider),
+                  _buildOnboardingPage(
+                      "Track & Thrive",
+                      "See your energy story unfold.",
+                      "assets/animations/track_thrive.json",
+                      Colors.teal,
+                      themeProvider),
+                  _buildOnboardingPage(
+                      "Your Energy, Reimagined",
+                      "Offline-ready, future-proof.",
+                      "assets/animations/energy_reimagined.json",
+                      Colors.cyan,
+                      themeProvider,
+                      isLast: true),
+                ],
+              ),
+              Positioned(
+                bottom: 40,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(4, (index) => _buildDot(index)),
+                    ),
+                    const SizedBox(height: 20),
+                    if (_currentPage == 3)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              onChanged: (value) => ownerName = value,
+                              style: TextStyle(
+                                color: themeProvider.isDarkMode 
+                                    ? const Color(0xFFE0E7FF) 
+                                    : const Color(0xFF2C3E50),
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Enter your name",
+                                hintStyle: TextStyle(
+                                  color: themeProvider.isDarkMode 
+                                      ? Colors.grey[500] 
+                                      : Colors.grey[600],
+                                ),
+                                filled: true,
+                                fillColor: themeProvider.isDarkMode 
+                                    ? const Color(0xFF2A3555) 
+                                    : Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: const EdgeInsets.all(16),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EnergyDashboard(initialName: ownerName),
+                                  ),
+                                );
+                              },
+                              child: const Text("Enter the Energy Monitor"),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: () => _pageController.nextPage(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                        ),
+                        child: const Text("Next"),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(4, (index) => _buildDot(index)),
-                ),
-                const SizedBox(height: 20),
-                if (_currentPage == 3)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          onChanged: (value) => ownerName = value,
-                          style: const TextStyle(color: Color(0xFFE0E7FF)),
-                          decoration: InputDecoration(
-                            hintText: "Enter your name",
-                            hintStyle: TextStyle(color: Colors.grey[500]),
-                            filled: true,
-                            fillColor: const Color(0xFF2A3555),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.all(16),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    EnergyDashboard(initialName: ownerName),
-                              ),
-                            );
-                          },
-                          child: const Text("Enter the Energy Monitor"),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: () => _pageController.nextPage(
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                    ),
-                    child: const Text("Next"),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildOnboardingPage(
       String title, String description, String lottieUrl, Color color,
-      {bool isLast = false}) {
+      ThemeProvider themeProvider, {bool isLast = false}) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withAlpha(204), const Color(0xFF0A1F33)],
+          colors: [
+            color.withAlpha(204), 
+            themeProvider.isDarkMode 
+                ? const Color(0xFF0A1F33) 
+                : const Color(0xFFF5F5F5)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -197,11 +326,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall!
-                  .copyWith(color: Colors.white)),
+                  .copyWith(color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50))),
           const SizedBox(height: 10),
           Text(description,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 18)),
+              style: TextStyle(
+                color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700], 
+                fontSize: 18
+              )),
         ],
       ),
     );
@@ -533,10 +665,13 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     with SingleTickerProviderStateMixin {
   String currentWatts = "0";
   List<Map<String, dynamic>> history = [];
+  List<Map<String, dynamic>> historicalData = [];
+  List<Map<String, dynamic>> dailyStats = [];
   String ownerName = "";
   Database? database;
   bool advancedMode = false;
   bool _isFetching = true; // Start with fetching true to show loading
+  bool _isLoadingHistorical = false; // Add loading state for historical data
   int _currentIndex = 0;
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
@@ -554,6 +689,12 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       print('Fetch Error: $e');
       if (mounted) setState(() => _isFetching = false); // Handle error state
     });
+    
+    // Also load historical data from logs
+    _fetchHistoricalData(days: 7).catchError((e) {
+      print('Historical data init error: $e');
+    });
+    
     _initSpeech();
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1000))
@@ -574,10 +715,18 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   }
 
   void _initSpeech() async {
-    await _speech.initialize();
-    await _flutterTts.setLanguage("en-US");
-    await _flutterTts.speak(
-        "Welcome to Energy Monitor, $ownerName. Let's optimize your energy!");
+    try {
+      await _speech.initialize();
+      
+      // Only initialize TTS on non-web platforms
+      if (!kIsWeb) {
+        await _flutterTts.setLanguage("en-US");
+        await _flutterTts.speak(
+            "Welcome to Energy Monitor, $ownerName. Let's optimize your energy!");
+      }
+    } catch (e) {
+      print('Speech/TTS initialization error: $e');
+    }
   }
 
   static Future<dynamic> _fetchDataIsolate(String url) async {
@@ -671,23 +820,184 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     }
   }
 
-  void _listenForCommands() async {
-    if (await _speech.listen(
-      onResult: (result) {
-        if (result.finalResult) {
-          if (result.recognizedWords.toLowerCase().contains('current usage')) {
-            _flutterTts.speak('The current usage is $currentWatts watts.');
-          } else if (result.recognizedWords
-              .toLowerCase()
-              .contains('generate report')) {
-            _generatePdfReport();
-            _flutterTts.speak('Report generated.');
+  Future<void> _fetchHistoricalData({int days = 7}) async {
+    if (mounted) setState(() => _isLoadingHistorical = true);
+    try {
+      final response = await http.get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'));
+      print('API Response /history: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        // Handle different response formats
+        if (data.containsKey('data') && data.containsKey('daily_stats')) {
+          setState(() {
+            // Update both historical data and daily stats
+            historicalData = List<Map<String, dynamic>>.from(data['data']);
+            dailyStats = List<Map<String, dynamic>>.from(data['daily_stats']);
+            
+            // Also update the main history list for the chart
+            // Convert log data format to match the expected chart format
+            history = historicalData.map<Map<String, dynamic>>((item) {
+              return {
+                'timestamp': item['timestamp'],
+                'watts': item['watts'] is int ? (item['watts'] as int).toDouble() : item['watts'] as double,
+              };
+            }).toList();
+            
+            // Update current watts to the latest reading if available
+            if (history.isNotEmpty) {
+              currentWatts = history.first['watts'].toStringAsFixed(2);
+            }
+          });
+          
+          // Cache the new data
+          await database?.delete('cache');
+          for (var item in history) {
+            await database?.insert('cache', {'timestamp': item['timestamp'], 'watts': item['watts']});
           }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Loaded ${history.length} historical readings from logs"))
+          );
+        } else if (data.containsKey('error')) {
+          // Handle error response from mock server
+          print('API Error: ${data['error']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("API Error: ${data['error']}"))
+          );
+        } else {
+          // Handle unexpected response format
+          print('API Error: Invalid response format');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Invalid response format from server"))
+          );
         }
-      },
-    )) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Listening...")));
+      } else {
+        throw Exception('Failed to fetch historical data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Historical data fetch error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error loading historical data: $e"))
+      );
+    } finally {
+      if (mounted) setState(() => _isLoadingHistorical = false);
+    }
+  }
+
+  Future<void> _downloadLogFile(String logType) async {
+    try {
+      // For web platform, create a download link
+      if (kIsWeb) {
+        final response = await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+        if (response.statusCode == 200) {
+          // For web, we'll use a simple approach - show a message with the data
+          // In a real implementation, you'd use dart:html for proper file download
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Log data received (${response.bodyBytes.length} bytes). Web download feature coming soon!"),
+              duration: const Duration(seconds: 3),
+            )
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to download log file"))
+          );
+        }
+        return;
+      }
+
+      // For mobile platforms, use storage permission
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+        if (!status.isGranted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Storage permission required to download logs"))
+          );
+          return;
+        }
+      }
+
+      final response = await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+      if (response.statusCode == 200) {
+        final directory = await getExternalStorageDirectory();
+        if (directory == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Could not access storage directory"))
+          );
+          return;
+        }
+        
+        final file = File('${directory.path}/$logType.log');
+        await file.writeAsBytes(response.bodyBytes);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Log file downloaded to: ${file.path}"))
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to download log file"))
+        );
+      }
+    } catch (e) {
+      print('Download error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Download error: $e"))
+      );
+    }
+  }
+
+  Future<void> _showLogDownloadDialog() async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Download Log Files"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.monitor),
+              title: const Text("Energy Monitor Log"),
+              subtitle: const Text("Historical energy readings"),
+              onTap: () {
+                Navigator.pop(context);
+                _downloadLogFile("energy-monitor");
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.api),
+              title: const Text("API Log"),
+              subtitle: const Text("API request history"),
+              onTap: () {
+                Navigator.pop(context);
+                _downloadLogFile("api");
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _refreshAllData() async {
+    setState(() => _isFetching = true);
+    try {
+      await Future.wait([
+        _fetchData(),
+        _fetchHistoricalData(days: 7),
+      ]);
+    } catch (e) {
+      print('Refresh error: $e');
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
     }
   }
 
@@ -716,244 +1026,341 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       }
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.network(
-              'https://img.icons8.com/ios-filled/50/ffffff/lightning-bolt.png',
-              width: 40,
-              height: 40),
-        ),
-        title: const Text("Energy Monitor"),
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.mic), onPressed: _listenForCommands),
-          IconButton(
-              icon: const Icon(Icons.print), onPressed: _generatePdfReport),
-          Switch(
-              value: advancedMode,
-              activeColor: const Color(0xFF4CAF50),
-              onChanged: (value) => setState(() => advancedMode = value)),
-        ],
-      ),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        transitionBuilder: (child, animation) =>
-            FadeTransition(opacity: animation, child: child),
-        child: getCurrentPage(),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        backgroundColor: const Color(0xFF1E2A44),
-        selectedItemColor: const Color(0xFF4CAF50),
-        unselectedItemColor: Colors.white70,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.bolt), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.timeline), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _isFetching ? null : () => _fetchData(),
-        backgroundColor: const Color(0xFF4CAF50),
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) => Transform.rotate(
-            angle: _animationController.value * 2 * 3.14159,
-            child: const Icon(Icons.refresh),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            leading: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.network(
+                  'https://img.icons8.com/ios-filled/50/ffffff/lightning-bolt.png',
+                  width: 40,
+                  height: 40),
+            ),
+            title: const Text("Energy Monitor"),
+            actions: [
+              IconButton(
+                  icon: const Icon(Icons.download), onPressed: _showLogDownloadDialog),
+              // Theme Toggle Button
+              IconButton(
+                icon: Icon(
+                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  color: themeProvider.isDarkMode ? Colors.yellow : Colors.white,
+                ),
+                onPressed: () => themeProvider.toggleTheme(),
+                tooltip: themeProvider.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+              ),
+              Switch(
+                  value: advancedMode,
+                  activeColor: const Color(0xFF4CAF50),
+                  onChanged: (value) => setState(() => advancedMode = value)),
+            ],
           ),
-        ),
-      ),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: getCurrentPage(),
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) => setState(() => _currentIndex = index),
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.bolt), label: 'Dashboard'),
+              BottomNavigationBarItem(icon: Icon(Icons.timeline), label: 'History'),
+              BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            ],
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: _isFetching ? null : () => _refreshAllData(),
+            backgroundColor: const Color(0xFF4CAF50),
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) => Transform.rotate(
+                angle: _animationController.value * 2 * 3.14159,
+                child: const Icon(Icons.refresh),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildHomePage(String greeting) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: constraints.maxWidth,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4CAF50), Color(0xFF2A3555)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  const BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 15,
-                      offset: Offset(0, 8))
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("$greeting, $ownerName!",
-                      style: Theme.of(context).textTheme.headlineMedium),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Current Usage",
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall!
-                              .copyWith(color: Colors.white70)),
-                      Text("$currentWatts W",
-                          style: const TextStyle(
-                              fontSize: 28,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold)),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: constraints.maxWidth,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF4CAF50), 
+                        themeProvider.isDarkMode 
+                            ? const Color(0xFF2A3555) 
+                            : const Color(0xFFE8F5E8)
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                          color: themeProvider.isDarkMode 
+                              ? Colors.black26 
+                              : Colors.grey.withValues(alpha: 0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8))
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: SizedBox(
-                      height: 200,
-                      width: 200,
-                      child: SfRadialGauge(
-                        axes: [
-                          RadialAxis(
-                            minimum: 0,
-                            maximum: 100,
-                            ranges: [
-                              GaugeRange(
-                                  startValue: 0,
-                                  endValue: 33,
-                                  color: Colors.green),
-                              GaugeRange(
-                                  startValue: 33,
-                                  endValue: 66,
-                                  color: Colors.orange),
-                              GaugeRange(
-                                  startValue: 66,
-                                  endValue: 100,
-                                  color: Colors.red),
-                            ],
-                            pointers: [
-                              NeedlePointer(
-                                  value: double.tryParse(currentWatts) ?? 0,
-                                  enableAnimation: true)
-                            ],
-                            annotations: [
-                              GaugeAnnotation(
-                                widget: Text('$currentWatts W',
-                                    style: const TextStyle(
-                                        fontSize: 20,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold)),
-                                angle: 90,
-                                positionFactor: 0.5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("$greeting, $ownerName!",
+                          style: Theme.of(context).textTheme.headlineMedium),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Current Usage",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall!
+                                  .copyWith(color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700])),
+                          Text("$currentWatts W",
+                              style: TextStyle(
+                                  fontSize: 28,
+                                  color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: SizedBox(
+                          height: 200,
+                          width: 200,
+                          child: SfRadialGauge(
+                            axes: [
+                              RadialAxis(
+                                minimum: 0,
+                                maximum: 100,
+                                ranges: [
+                                  GaugeRange(
+                                      startValue: 0,
+                                      endValue: 33,
+                                      color: Colors.green),
+                                  GaugeRange(
+                                      startValue: 33,
+                                      endValue: 66,
+                                      color: Colors.orange),
+                                  GaugeRange(
+                                      startValue: 66,
+                                      endValue: 100,
+                                      color: Colors.red),
+                                ],
+                                pointers: [
+                                  NeedlePointer(
+                                      value: double.tryParse(currentWatts) ?? 0,
+                                      enableAnimation: true)
+                                ],
+                                annotations: [
+                                  GaugeAnnotation(
+                                    widget: Text('$currentWatts W',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50),
+                                            fontWeight: FontWeight.bold)),
+                                    angle: 90,
+                                    positionFactor: 0.5,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-            Text("Energy Impact Scorecard",
-                style: Theme.of(context).textTheme.headlineSmall),
-            Container(
-              height: constraints.maxWidth > 600 ? 200 : 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4CAF50), Color(0xFF0A1F33)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // const Text("Your Impact This Week",
-                  //     style: TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold)),
-                  // const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Card(
-                        color: Colors.green[700],
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            children: [
-                              const Text("Saved Today", style: TextStyle(color: Colors.white)),
-                              Text("${(150 - (double.tryParse(currentWatts) ?? 0.0)).toStringAsFixed(2)} W",
-                                  style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Card(
-                        color: Colors.blue[700],
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            children: [
-                              const Text("Total Savings", style: TextStyle(color: Colors.white)),
-                              Text("${(history.isNotEmpty ? history.fold<double>(0.0, (sum, e) => sum + ((e['watts'] is num) ? (e['watts'] as num).toDouble() : 0.0)) / history.length : 0.0).toStringAsFixed(2)} W",
-                                  style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-            ExpansionTile(
-              title: Text("AI Energy Insights",
-                  style: Theme.of(context).textTheme.headlineSmall),
-              collapsedBackgroundColor: const Color(0xFF1E2A44),
-              backgroundColor: const Color(0xFF2A3555),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    "Reduce appliance usage during peak hours (6-9 PM) to save up to 20% this month!",
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 30),
+                Text("Energy Impact Scorecard",
+                    style: Theme.of(context).textTheme.headlineSmall),
+                Container(
+                  height: constraints.maxWidth > 600 ? 200 : 140,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF4CAF50), 
+                        themeProvider.isDarkMode 
+                            ? const Color(0xFF0A1F33) 
+                            : const Color(0xFFE8F5E8)
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Card(
+                            color: Colors.green[700],
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  const Text("Average Usage", style: TextStyle(color: Colors.white)),
+                                  Text("${_calculateAverageUsage().toStringAsFixed(1)} W",
+                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Card(
+                            color: Colors.blue[700],
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  const Text("Peak Usage", style: TextStyle(color: Colors.white)),
+                                  Text("${_calculatePeakUsage().toStringAsFixed(1)} W",
+                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Card(
+                            color: Colors.orange[700],
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  const Text("Total Readings", style: TextStyle(color: Colors.white)),
+                                  Text("${_getTotalReadings()}",
+                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 30),
+                ExpansionTile(
+                  title: Text("AI Energy Insights",
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  collapsedBackgroundColor: themeProvider.isDarkMode 
+                      ? const Color(0xFF1E2A44) 
+                      : Colors.white,
+                  backgroundColor: themeProvider.isDarkMode 
+                      ? const Color(0xFF2A3555) 
+                      : Colors.grey[50],
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FutureBuilder<String>(
+                        future: AIEnergyInsights.getEnergyInsight(
+                          historicalData.isNotEmpty ? historicalData : history,
+                          double.tryParse(currentWatts) ?? 0.0
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                                SizedBox(width: 10),
+                                Text("Analyzing your energy data..."),
+                              ],
+                            );
+                          }
+                          
+                          return Text(
+                            snapshot.data ?? "Unable to generate insights at this time.",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (advancedMode)
+                  ElevatedButton.icon(
+                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("AR Mode Coming Soon!"))),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("Launch AR View"),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                  ),
               ],
             ),
-            const SizedBox(height: 20),
-            if (advancedMode)
-              ElevatedButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("AR Mode Coming Soon!"))),
-                icon: const Icon(Icons.camera_alt),
-                label: const Text("Launch AR View"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
+  // Helper methods for Energy Impact Scorecard
+  double _calculateAverageUsage() {
+    List<Map<String, dynamic>> dataToUse = historicalData.isNotEmpty ? historicalData : history;
+    if (dataToUse.isEmpty) return 0.0;
+    
+    double total = dataToUse.fold<double>(0.0, (double sum, item) {
+      final watts = item['watts'];
+      return sum + _safeWattsToDouble(watts);
+    });
+    
+    return total / dataToUse.length;
+  }
+
+  double _calculatePeakUsage() {
+    List<Map<String, dynamic>> dataToUse = historicalData.isNotEmpty ? historicalData : history;
+    if (dataToUse.isEmpty) return 0.0;
+    
+    return dataToUse.fold<double>(0.0, (double max, item) {
+      final watts = item['watts'];
+      double wattsValue = _safeWattsToDouble(watts);
+      return wattsValue > max ? wattsValue : max;
+    });
+  }
+
+  int _getTotalReadings() {
+    List<Map<String, dynamic>> dataToUse = historicalData.isNotEmpty ? historicalData : history;
+    return dataToUse.length;
+  }
+
+  // Helper function to safely convert watts to double
+  double _safeWattsToDouble(dynamic watts) {
+    if (watts is int) return watts.toDouble();
+    if (watts is double) return watts;
+    if (watts is String) return double.tryParse(watts) ?? 0.0;
+    return 0.0;
+  }
+
   Widget _buildHistoryPage() {
-    // Sort history by timestamp ascending for proper chart display
-    List<Map<String, dynamic>> sortedHistory = List.from(history);
-    sortedHistory.sort((a, b) {
+    // Use historical data from logs if available, otherwise fall back to basic history
+    List<Map<String, dynamic>> chartData = historicalData.isNotEmpty ? historicalData : history;
+    
+    // Sort data by timestamp ascending for proper chart display
+    List<Map<String, dynamic>> sortedData = List.from(chartData);
+    sortedData.sort((a, b) {
       try {
         return DateTime.parse(a['timestamp'])
             .compareTo(DateTime.parse(b['timestamp']));
@@ -972,10 +1379,10 @@ class _EnergyDashboardState extends State<EnergyDashboard>
 
     // The x-axis for this line will be from the earliest to the latest timestamp
     DateTime? minTime, maxTime;
-    if (sortedHistory.isNotEmpty) {
+    if (sortedData.isNotEmpty) {
       try {
-        minTime = DateTime.parse(sortedHistory.first['timestamp']);
-        maxTime = DateTime.parse(sortedHistory.last['timestamp']);
+        minTime = DateTime.parse(sortedData.first['timestamp']);
+        maxTime = DateTime.parse(sortedData.last['timestamp']);
       } catch (_) {
         minTime = DateTime.now();
         maxTime = DateTime.now();
@@ -1007,92 +1414,207 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Energy Timeline",
-              style: Theme.of(context).textTheme.headlineSmall),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Energy Timeline",
+                  style: Theme.of(context).textTheme.headlineSmall),
+              ElevatedButton.icon(
+                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
+                icon: _isLoadingHistorical 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.history),
+                label: _isLoadingHistorical 
+                    ? const Text("Loading...")
+                    : const Text("Load Historical Data"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              ),
+            ],
+          ),
           const SizedBox(height: 20),
+          
+          // Data source indicator
+          if (historicalData.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Showing log data (${sortedData.length} readings)",
+                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          
+          // Daily Statistics Section
+          if (dailyStats.isNotEmpty) ...[
+            Text("Daily Statistics (Last 7 Days)",
+                style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: dailyStats.length,
+                itemBuilder: (context, index) {
+                  final stat = dailyStats[index];
+                  return Card(
+                    margin: const EdgeInsets.only(right: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(stat['date'] ?? 'Unknown',
+                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Text("Avg: ${(stat['avg_watts'] as num).toStringAsFixed(1)} W"),
+                          Text("Max: ${(stat['max_watts'] as num).toStringAsFixed(1)} W"),
+                          Text("Min: ${(stat['min_watts'] as num).toStringAsFixed(1)} W"),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          
           Expanded(
-            child: sortedHistory.isNotEmpty
-                ? SfCartesianChart(
-                    primaryXAxis: DateTimeAxis(
-                      dateFormat: DateFormat.Hm(),
-                      intervalType: DateTimeIntervalType.hours,
-                      majorGridLines: const MajorGridLines(width: 0.5),
+            child: _isLoadingHistorical
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFF4CAF50)),
+                        SizedBox(height: 16),
+                        Text("Loading historical data from logs...",
+                            style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      ],
                     ),
-                    primaryYAxis: NumericAxis(
-                      title: AxisTitle(text: "Watts"),
-                      majorGridLines: const MajorGridLines(width: 0.5),
-                    ),
-                    series: [
-                      // Main energy history spline
-                      SplineSeries<Map<String, dynamic>, DateTime>(
-                        dataSource: sortedHistory,
-                        xValueMapper: (data, _) {
-                          try {
-                            return DateTime.parse(data['timestamp']);
-                          } catch (e) {
-                            return DateTime.now(); // Fallback to current time if parsing fails
-                          }
-                        },
-                        yValueMapper: (data, _) {
-                          var watts = data['watts'];
-                          if (watts is int) return watts.toDouble();
-                          if (watts is double) return watts;
-                          if (watts is String) return double.tryParse(watts) ?? 0.0;
-                          return 0.0; // Default to 0 if no valid watts
-                        },
-                        color: const Color(0xFF4CAF50),
-                        animationDuration: 1000,
-                        enableTooltip: true,
-                        markerSettings: const MarkerSettings(isVisible: true),
-                      ),
-                      // Graphical line from 0 to currentWatts
-                      LineSeries<Map<String, dynamic>, DateTime>(
-                        dataSource: zeroToCurrentLine,
-                        xValueMapper: (data, _) {
-                          try {
-                            return DateTime.parse(data['timestamp']);
-                          } catch (e) {
-                            return DateTime.now();
-                          }
-                        },
-                        yValueMapper: (data, _) {
-                          var watts = data['watts'];
-                          if (watts is int) return watts.toDouble();
-                          if (watts is double) return watts;
-                          if (watts is String) return double.tryParse(watts) ?? 0.0;
-                          return 0.0;
-                        },
-                        color: Colors.orange,
-                        width: 3,
-                        dashArray: <double>[6, 3],
-                        markerSettings: const MarkerSettings(isVisible: false),
-                        name: "Current Watts Line",
-                      ),
-                    ],
-                    zoomPanBehavior: ZoomPanBehavior(
-                      enablePinching: true,
-                      enablePanning: true,
-                      zoomMode: ZoomMode.xy,
-                    ),
-                    tooltipBehavior: TooltipBehavior(enable: true),
-                    legend: Legend(isVisible: false),
                   )
-                : const Center(
-                    child: Text("No history data available.",
-                        style: TextStyle(color: Colors.white70, fontSize: 18))),
+                : sortedData.isNotEmpty
+                    ? SfCartesianChart(
+                        primaryXAxis: DateTimeAxis(
+                          dateFormat: DateFormat.MMMd().add_Hm(),
+                          intervalType: DateTimeIntervalType.hours,
+                          majorGridLines: const MajorGridLines(width: 0.5),
+                        ),
+                        primaryYAxis: NumericAxis(
+                          title: AxisTitle(text: "Watts"),
+                          majorGridLines: const MajorGridLines(width: 0.5),
+                        ),
+                        series: [
+                          // Main energy history spline
+                          SplineSeries<Map<String, dynamic>, DateTime>(
+                            dataSource: sortedData,
+                            xValueMapper: (data, _) {
+                              try {
+                                return DateTime.parse(data['timestamp']);
+                              } catch (e) {
+                                return DateTime.now(); // Fallback to current time if parsing fails
+                              }
+                            },
+                            yValueMapper: (data, _) {
+                              final watts = data['watts'];
+                              if (watts is int) return watts.toDouble();
+                              if (watts is double) return watts;
+                              if (watts is String) return double.tryParse(watts) ?? 0.0;
+                              return 0.0; // Default to 0 if no valid watts
+                            },
+                            color: const Color(0xFF4CAF50),
+                            animationDuration: 1000,
+                            enableTooltip: true,
+                            markerSettings: const MarkerSettings(isVisible: true),
+                            name: "Energy Usage",
+                          ),
+                          // Graphical line from 0 to currentWatts
+                          LineSeries<Map<String, dynamic>, DateTime>(
+                            dataSource: zeroToCurrentLine,
+                            xValueMapper: (data, _) {
+                              try {
+                                return DateTime.parse(data['timestamp']);
+                              } catch (e) {
+                                return DateTime.now();
+                              }
+                            },
+                            yValueMapper: (data, _) {
+                              final watts = data['watts'];
+                              if (watts is int) return watts.toDouble();
+                              if (watts is double) return watts;
+                              if (watts is String) return double.tryParse(watts) ?? 0.0;
+                              return 0.0;
+                            },
+                            color: Colors.orange,
+                            width: 3,
+                            dashArray: <double>[6, 3],
+                            markerSettings: const MarkerSettings(isVisible: false),
+                            name: "Current Watts Line",
+                          ),
+                        ],
+                        zoomPanBehavior: ZoomPanBehavior(
+                          enablePinching: true,
+                          enablePanning: true,
+                          zoomMode: ZoomMode.xy,
+                        ),
+                        tooltipBehavior: TooltipBehavior(
+                          enable: true,
+                          format: 'Energy: point.y W\nTime: point.x',
+                        ),
+                        legend: Legend(
+                          isVisible: true,
+                          position: LegendPosition.bottom,
+                        ),
+                      )
+                    : const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.timeline, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text("No history data available.",
+                                style: TextStyle(color: Colors.grey, fontSize: 18)),
+                            SizedBox(height: 8),
+                            Text("Click 'Load Historical Data' to fetch from logs",
+                                style: TextStyle(color: Colors.grey, fontSize: 14)),
+                          ],
+                        )),
           ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: null, // Disabled until implemented
-                child: const Text("Day View"),
+                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 1),
+                child: _isLoadingHistorical 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text("Day View"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               ),
               ElevatedButton(
-                onPressed: null, // Disabled until implemented
-                child: const Text("Week View"),
+                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
+                child: _isLoadingHistorical 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text("Week View"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              ),
+              ElevatedButton(
+                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 30),
+                child: _isLoadingHistorical 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text("Month View"),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               ),
             ],
@@ -1368,5 +1890,105 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     _animationController.dispose();
     database?.close();
     super.dispose();
+  }
+}
+
+// AI API for Energy Insights
+class AIEnergyInsights {
+  // Helper function to safely convert watts to double
+  static double _safeWattsToDouble(dynamic watts) {
+    if (watts is int) return watts.toDouble();
+    if (watts is double) return watts;
+    if (watts is String) return double.tryParse(watts) ?? 0.0;
+    return 0.0;
+  }
+
+  static Future<String> getEnergyInsight(List<Map<String, dynamic>> historicalData, double currentWatts) async {
+    try {
+      // Calculate some basic metrics for AI analysis
+      if (historicalData.isEmpty) {
+        return "Start monitoring your energy usage to receive personalized insights!";
+      }
+
+      // Calculate average usage
+      double avgUsage = historicalData.fold<double>(0.0, (double sum, item) {
+        final watts = item['watts'];
+        return sum + _safeWattsToDouble(watts);
+      }) / historicalData.length;
+
+      // Calculate peak usage
+      double peakUsage = historicalData.fold<double>(0.0, (double max, item) {
+        final watts = item['watts'];
+        double wattsValue = _safeWattsToDouble(watts);
+        return wattsValue > max ? wattsValue : max;
+      });
+
+      // Calculate usage trend (comparing recent vs older data)
+      int midPoint = historicalData.length ~/ 2;
+      double recentAvg = 0.0;
+      double olderAvg = 0.0;
+      
+      if (historicalData.length > 1) {
+        List<Map<String, dynamic>> recentData = historicalData.take(midPoint).toList();
+        List<Map<String, dynamic>> olderData = historicalData.skip(midPoint).toList();
+        
+        recentAvg = recentData.fold<double>(0.0, (double sum, item) {
+          final watts = item['watts'];
+          return sum + _safeWattsToDouble(watts);
+        }) / recentData.length;
+        
+        olderAvg = olderData.fold<double>(0.0, (double sum, item) {
+          final watts = item['watts'];
+          return sum + _safeWattsToDouble(watts);
+        }) / olderData.length;
+      }
+
+      // Generate AI insights based on data analysis
+      List<String> insights = [];
+      
+      // Current usage analysis
+      if (currentWatts > avgUsage * 1.5) {
+        insights.add("Your current usage is ${currentWatts.toStringAsFixed(1)}W, which is 50% above average. Consider reducing appliance usage.");
+      } else if (currentWatts < avgUsage * 0.5) {
+        insights.add("Great job! Your current usage is well below average. Keep up the energy efficiency!");
+      }
+
+      // Peak usage analysis
+      if (peakUsage > 100) {
+        insights.add("Peak usage reached ${peakUsage.toStringAsFixed(1)}W. Try to spread out heavy appliance usage.");
+      }
+
+      // Trend analysis
+      if (recentAvg > olderAvg * 1.2) {
+        insights.add("Usage trend is increasing. Consider implementing energy-saving habits.");
+      } else if (recentAvg < olderAvg * 0.8) {
+        insights.add("Excellent! Your energy usage is trending downward. Your efficiency efforts are working!");
+      }
+
+      // Time-based recommendations
+      int hour = DateTime.now().hour;
+      if (hour >= 6 && hour <= 9) {
+        insights.add("Morning peak hours (6-9 AM): Consider delaying non-essential appliance use until off-peak hours.");
+      } else if (hour >= 17 && hour <= 21) {
+        insights.add("Evening peak hours (5-9 PM): This is typically the highest energy demand period. Use appliances earlier or later if possible.");
+      }
+
+      // General recommendations
+      if (avgUsage > 80) {
+        insights.add("Your average usage is high. Consider upgrading to energy-efficient appliances or LED lighting.");
+      }
+
+      // If no specific insights, provide general advice
+      if (insights.isEmpty) {
+        insights.add("Your energy usage looks good! Continue monitoring and look for opportunities to optimize further.");
+      }
+
+      // Return the most relevant insight (first one)
+      return insights.first;
+      
+    } catch (e) {
+      print('AI Insight Error: $e');
+      return "Monitor your energy patterns to receive personalized insights!";
+    }
   }
 }
