@@ -17,13 +17,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 // Toggle for dummy data (uses Postman mock server when true)
-const bool useDummyData = true;
+const bool useDummyData = false;
 // Configurable API base URL (switches to mock server for dummy data)
 const String apiBaseUrl = useDummyData
     ? 'https://5ed82b73-5ed4-4c32-99b2-47b88a17336d.mock.pstmn.io'
     : 'http://localhost:8000';
 
-// Theme Provider
+// Theme Provider (Managing and switching between dark and light theme)
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = true; // Default to dark mode
 
@@ -153,6 +153,7 @@ void main() {
   runApp(const EnergyMonitorApp());
 }
 
+// Dynamic theming (dark/light Mode) using provider for state management and launches onboarding screen as the first page
 class EnergyMonitorApp extends StatelessWidget {
   const EnergyMonitorApp({Key? key}) : super(key: key);
 
@@ -173,7 +174,7 @@ class EnergyMonitorApp extends StatelessWidget {
   }
 }
 
-// Onboarding Screen (unchanged)
+// Onboarding Screen
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
 
@@ -181,6 +182,7 @@ class OnboardingScreen extends StatefulWidget {
   _OnboardingScreenState createState() => _OnboardingScreenState();
 }
 
+// State class for OnboardingScreen widget (Manage the onboarding flow, user's name collection and transition)
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
@@ -302,40 +304,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildOnboardingPage(
       String title, String description, String lottieUrl, Color color,
       ThemeProvider themeProvider, {bool isLast = false}) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withAlpha(204), 
-            themeProvider.isDarkMode 
-                ? const Color(0xFF0A1F33) 
-                : const Color(0xFFF5F5F5)
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Lottie.network(lottieUrl,
-              width: 300, height: 300, fit: BoxFit.contain),
-          const SizedBox(height: 20),
-          Text(title,
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineSmall!
-                  .copyWith(color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50))),
-          const SizedBox(height: 10),
-          Text(description,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700], 
-                fontSize: 18
-              )),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmallScreen = constraints.maxHeight < 600 || constraints.maxWidth < 350;
+        return SingleChildScrollView(
+          child: Container(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withAlpha(204), 
+                  themeProvider.isDarkMode 
+                      ? const Color(0xFF0A1F33) 
+                      : const Color(0xFFF5F5F5)
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            padding: EdgeInsets.all(isSmallScreen ? 16 : 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.network(lottieUrl,
+                    width: isSmallScreen ? 180 : 300, height: isSmallScreen ? 180 : 300, fit: BoxFit.contain),
+                const SizedBox(height: 20),
+                Text(title,
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineSmall!
+                        .copyWith(fontSize: isSmallScreen ? 18 : 24, color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50))),
+                const SizedBox(height: 10),
+                Text(description,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700], 
+                      fontSize: isSmallScreen ? 14 : 18
+                    )),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -355,6 +367,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+// Energy Challenges Sceen
 class EnergyChallengeScreen extends StatefulWidget {
   final Function(List<String> achievements, double score) onAchievementsEarned;
   const EnergyChallengeScreen({Key? key, required this.onAchievementsEarned})
@@ -364,17 +377,13 @@ class EnergyChallengeScreen extends StatefulWidget {
   State<EnergyChallengeScreen> createState() => _EnergyChallengeScreenState();
 }
 
+//State class for EnergyChallengeScreen (Got bored, and added a challenge game for the user to go through)
 class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
   final List<Map<String, dynamic>> _questions = [
     {
       "question":
           "What is the most energy-efficient time to use heavy appliances?",
-      "options": [
-        "During peak hours",
-        "During off-peak hours",
-        "At noon",
-        "Anytime"
-      ],
+      "options": ["During peak hours", "During off-peak hours", "At noon", "Anytime"],
       "answer": 1,
     },
     {
@@ -384,22 +393,12 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "What does a smart meter do?",
-      "options": [
-        "Measures water usage",
-        "Measures energy usage in real time",
-        "Cools your house",
-        "Charges your phone"
-      ],
+      "options": ["Measures water usage", "Measures energy usage in real time", "Cools your house", "Charges your phone"],
       "answer": 1,
     },
     {
       "question": "What is a phantom load?",
-      "options": [
-        "Energy used by appliances when off",
-        "Energy from solar panels",
-        "Wind energy",
-        "None of the above"
-      ],
+      "options": ["Energy used by appliances when off", "Energy from solar panels", "Wind energy", "None of the above"],
       "answer": 0,
     },
     {
@@ -409,22 +408,12 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "What is the best way to reduce AC energy use?",
-      "options": [
-        "Open windows during the day",
-        "Set thermostat higher",
-        "Run all day",
-        "Block vents"
-      ],
+      "options": ["Open windows during the day", "Set thermostat higher", "Run all day", "Block vents"],
       "answer": 1,
     },
     {
       "question": "What is net metering?",
-      "options": [
-        "Paying for internet",
-        "Selling excess solar energy back to the grid",
-        "Measuring water",
-        "None of the above"
-      ],
+      "options": ["Paying for internet", "Selling excess solar energy back to the grid", "Measuring water", "None of the above"],
       "answer": 1,
     },
     {
@@ -434,22 +423,12 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "What is the benefit of unplugging chargers?",
-      "options": [
-        "Saves energy",
-        "Makes phone charge faster",
-        "No benefit",
-        "Damages charger"
-      ],
+      "options": ["Saves energy", "Makes phone charge faster", "No benefit", "Damages charger"],
       "answer": 0,
     },
     {
       "question": "What is the main cause of peak energy demand?",
-      "options": [
-        "People sleeping",
-        "Simultaneous use of many appliances",
-        "Rainy weather",
-        "Solar panels"
-      ],
+      "options": ["People sleeping", "Simultaneous use of many appliances", "Rainy weather", "Solar panels"],
       "answer": 1,
     },
     {
@@ -459,32 +438,17 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "What does Energy Star label mean?",
-      "options": [
-        "High energy use",
-        "Energy efficient product",
-        "Expensive product",
-        "Old product"
-      ],
+      "options": ["High energy use", "Energy efficient product", "Expensive product", "Old product"],
       "answer": 1,
     },
     {
       "question": "What is the best way to save energy with lighting?",
-      "options": [
-        "Use more lamps",
-        "Use LED bulbs",
-        "Leave lights on",
-        "Use candles"
-      ],
+      "options": ["Use more lamps", "Use LED bulbs", "Leave lights on", "Use candles"],
       "answer": 1,
     },
     {
       "question": "What is a solar inverter?",
-      "options": [
-        "Converts DC to AC",
-        "Stores energy",
-        "Cools solar panels",
-        "Measures sunlight"
-      ],
+      "options": ["Converts DC to AC", "Stores energy", "Cools solar panels", "Measures sunlight"],
       "answer": 0,
     },
     {
@@ -494,12 +458,7 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "Which is a peak saving behavior?",
-      "options": [
-        "Run dishwasher at 7pm",
-        "Run dishwasher at 11pm",
-        "Run dishwasher at 6pm",
-        "Run dishwasher at 8am"
-      ],
+      "options": ["Run dishwasher at 7pm", "Run dishwasher at 11pm", "Run dishwasher at 6pm", "Run dishwasher at 8am"],
       "answer": 1,
     },
     {
@@ -509,32 +468,17 @@ class _EnergyChallengeScreenState extends State<EnergyChallengeScreen> {
     },
     {
       "question": "What is a kilowatt-hour?",
-      "options": [
-        "A measure of power",
-        "A measure of energy",
-        "A measure of time",
-        "A measure of voltage"
-      ],
+      "options": ["A measure of power", "A measure of energy", "A measure of time", "A measure of voltage"],
       "answer": 1,
     },
     {
       "question": "Which is a solar energy achievement?",
-      "options": [
-        "Using solar panels",
-        "Using more gas",
-        "Using more coal",
-        "None"
-      ],
+      "options": ["Using solar panels", "Using more gas", "Using more coal", "None"],
       "answer": 0,
     },
     {
       "question": "What is the best way to reduce standby power?",
-      "options": [
-        "Unplug devices",
-        "Use more devices",
-        "Leave everything plugged in",
-        "Use old appliances"
-      ],
+      "options": ["Unplug devices", "Use more devices", "Leave everything plugged in", "Use old appliances"],
       "answer": 0,
     },
   ];
@@ -661,6 +605,7 @@ class EnergyDashboard extends StatefulWidget {
   State<EnergyDashboard> createState() => _EnergyDashboardState();
 }
 
+//State class for EnergyDashboard 
 class _EnergyDashboardState extends State<EnergyDashboard>
     with SingleTickerProviderStateMixin {
   String currentWatts = "0";
@@ -799,14 +744,15 @@ class _EnergyDashboardState extends State<EnergyDashboard>
         // Fallback to dummy data if no cache
         setState(() {
           history = [
-            {'timestamp': DateTime.now().toIso8601String(), 'watts': 43.0}, // Match API response
+            {'timestamp': DateTime.now().toIso8601String(), 'watts': 00.0}, // Match API response
           ];
-          currentWatts = "43.00"; // Match API response
+          currentWatts = "00.00"; // Match API response
         });
       }
     }
   }
 
+  // ignore: unused_element
   Future<void> _generatePdfReport() async {
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text("PDF Report Generated!")));
@@ -836,7 +782,6 @@ class _EnergyDashboardState extends State<EnergyDashboard>
             historicalData = List<Map<String, dynamic>>.from(data['data']);
             dailyStats = List<Map<String, dynamic>>.from(data['daily_stats']);
             
-            // Also update the main history list for the chart
             // Convert log data format to match the expected chart format
             history = historicalData.map<Map<String, dynamic>>((item) {
               return {
@@ -1092,13 +1037,13 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       builder: (context, themeProvider, child) {
         return LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(constraints.maxWidth < 400 ? 12.0 : 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: constraints.maxWidth,
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(constraints.maxWidth < 400 ? 10 : 20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -1115,7 +1060,8 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       BoxShadow(
                           color: themeProvider.isDarkMode 
                               ? Colors.black26 
-                              : Colors.grey.withValues(alpha: 0.3),
+                              // ignore: deprecated_member_use
+                              : Colors.grey.withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8))
                     ],
@@ -1124,7 +1070,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("$greeting, $ownerName!",
-                          style: Theme.of(context).textTheme.headlineMedium),
+                          style: Theme.of(context).textTheme.headlineMedium!.copyWith(fontSize: constraints.maxWidth < 400 ? 20 : 32)),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1133,10 +1079,10 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineSmall!
-                                  .copyWith(color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700])),
+                                  .copyWith(fontSize: constraints.maxWidth < 400 ? 14 : 20, color: themeProvider.isDarkMode ? Colors.white70 : Colors.grey[700])),
                           Text("$currentWatts W",
                               style: TextStyle(
-                                  fontSize: 28,
+                                  fontSize: constraints.maxWidth < 400 ? 18 : 28,
                                   color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50),
                                   fontWeight: FontWeight.bold)),
                         ],
@@ -1144,8 +1090,8 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       const SizedBox(height: 20),
                       Center(
                         child: SizedBox(
-                          height: 200,
-                          width: 200,
+                          height: constraints.maxWidth < 400 ? 120 : 200,
+                          width: constraints.maxWidth < 400 ? 120 : 200,
                           child: SfRadialGauge(
                             axes: [
                               RadialAxis(
@@ -1174,7 +1120,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                                   GaugeAnnotation(
                                     widget: Text('$currentWatts W',
                                         style: TextStyle(
-                                            fontSize: 20,
+                                            fontSize: constraints.maxWidth < 400 ? 14 : 20,
                                             color: themeProvider.isDarkMode ? Colors.white : const Color(0xFF2C3E50),
                                             fontWeight: FontWeight.bold)),
                                     angle: 90,
@@ -1191,9 +1137,9 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                 ),
                 const SizedBox(height: 30),
                 Text("Energy Impact Scorecard",
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: constraints.maxWidth < 400 ? 16 : 24)),
                 Container(
-                  height: constraints.maxWidth > 600 ? 200 : 140,
+                  height: constraints.maxWidth > 600 ? 200 : (constraints.maxWidth < 400 ? 100 : 140),
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
@@ -1214,42 +1160,48 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Card(
-                            color: Colors.green[700],
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                children: [
-                                  const Text("Average Usage", style: TextStyle(color: Colors.white)),
-                                  Text("${_calculateAverageUsage().toStringAsFixed(1)} W",
-                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                                ],
+                          Flexible(
+                            child: Card(
+                              color: Colors.green[700],
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  children: [
+                                    const Text("Average Usage", style: TextStyle(color: Colors.white)),
+                                    Text("${_calculateAverageUsage().toStringAsFixed(1)} W",
+                                        style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                          Card(
-                            color: Colors.blue[700],
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                children: [
-                                  const Text("Peak Usage", style: TextStyle(color: Colors.white)),
-                                  Text("${_calculatePeakUsage().toStringAsFixed(1)} W",
-                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                                ],
+                          Flexible(
+                            child: Card(
+                              color: Colors.blue[700],
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  children: [
+                                    const Text("Peak Usage", style: TextStyle(color: Colors.white)),
+                                    Text("${_calculatePeakUsage().toStringAsFixed(1)} W",
+                                        style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                          Card(
-                            color: Colors.orange[700],
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                children: [
-                                  const Text("Total Readings", style: TextStyle(color: Colors.white)),
-                                  Text("${_getTotalReadings()}",
-                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-                                ],
+                          Flexible(
+                            child: Card(
+                              color: Colors.orange[700],
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  children: [
+                                    const Text("Total Readings", style: TextStyle(color: Colors.white)),
+                                    Text("${_getTotalReadings()}",
+                                        style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -1261,7 +1213,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                 const SizedBox(height: 30),
                 ExpansionTile(
                   title: Text("AI Energy Insights",
-                      style: Theme.of(context).textTheme.headlineSmall),
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: constraints.maxWidth < 400 ? 16 : 24)),
                   collapsedBackgroundColor: themeProvider.isDarkMode 
                       ? const Color(0xFF1E2A44) 
                       : Colors.white,
@@ -1409,381 +1361,531 @@ class _EnergyDashboardState extends State<EnergyDashboard>
       },
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmallScreen = constraints.maxWidth < 400;
+        final chartHeight = isSmallScreen
+            ? 220.0
+            : constraints.maxHeight > 500
+                ? 350.0
+                : 250.0;
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(isSmallScreen ? 12.0 : 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Energy Timeline",
-                  style: Theme.of(context).textTheme.headlineSmall),
-              ElevatedButton.icon(
-                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
-                icon: _isLoadingHistorical 
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.history),
-                label: _isLoadingHistorical 
-                    ? const Text("Loading...")
-                    : const Text("Load Historical Data"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          
-          // Data source indicator
-          if (historicalData.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Showing log data (${sortedData.length} readings)",
-                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                  Text("Energy Timeline",
+                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: isSmallScreen ? 16 : 24)),
+                  ElevatedButton.icon(
+                    onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
+                    icon: _isLoadingHistorical 
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.history),
+                    label: _isLoadingHistorical 
+                        ? const Text("Loading...")
+                        : const Text("Load Data"),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 10),
-          ],
-          
-          // Daily Statistics Section
-          if (dailyStats.isNotEmpty) ...[
-            Text("Daily Statistics (Last 7 Days)",
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: dailyStats.length,
-                itemBuilder: (context, index) {
-                  final stat = dailyStats[index];
-                  return Card(
-                    margin: const EdgeInsets.only(right: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(stat['date'] ?? 'Unknown',
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          Text("Avg: ${(stat['avg_watts'] as num).toStringAsFixed(1)} W"),
-                          Text("Max: ${(stat['max_watts'] as num).toStringAsFixed(1)} W"),
-                          Text("Min: ${(stat['min_watts'] as num).toStringAsFixed(1)} W"),
-                        ],
+              const SizedBox(height: 20),
+              if (historicalData.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Showing log data (${sortedData.length} readings)",
+                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-          
-          Expanded(
-            child: _isLoadingHistorical
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: Color(0xFF4CAF50)),
-                        SizedBox(height: 16),
-                        Text("Loading historical data from logs...",
-                            style: TextStyle(color: Colors.grey, fontSize: 16)),
-                      ],
-                    ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (dailyStats.isNotEmpty) ...[
+                Text("Daily Statistics (Last 7 Days)",
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: isSmallScreen ? 16 : 24)),
+                const SizedBox(height: 10),
+                if (isSmallScreen)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: dailyStats.map((stat) => SizedBox(
+                      width: 120,
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                stat['date'] ?? 'Unknown',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Avg: ${(stat['avg_watts'] as num).toStringAsFixed(1)} W",
+                                style: const TextStyle(fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                              ),
+                              Text(
+                                "Max: ${(stat['max_watts'] as num).toStringAsFixed(1)} W",
+                                style: const TextStyle(fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                              ),
+                              Text(
+                                "Min: ${(stat['min_watts'] as num).toStringAsFixed(1)} W",
+                                style: const TextStyle(fontSize: 10),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                softWrap: false,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )).toList(),
                   )
-                : sortedData.isNotEmpty
-                    ? SfCartesianChart(
-                        primaryXAxis: DateTimeAxis(
-                          dateFormat: DateFormat.MMMd().add_Hm(),
-                          intervalType: DateTimeIntervalType.hours,
-                          majorGridLines: const MajorGridLines(width: 0.5),
-                        ),
-                        primaryYAxis: NumericAxis(
-                          title: AxisTitle(text: "Watts"),
-                          majorGridLines: const MajorGridLines(width: 0.5),
-                        ),
-                        series: [
-                          // Main energy history spline
-                          SplineSeries<Map<String, dynamic>, DateTime>(
-                            dataSource: sortedData,
-                            xValueMapper: (data, _) {
-                              try {
-                                return DateTime.parse(data['timestamp']);
-                              } catch (e) {
-                                return DateTime.now(); // Fallback to current time if parsing fails
-                              }
-                            },
-                            yValueMapper: (data, _) {
-                              final watts = data['watts'];
-                              if (watts is int) return watts.toDouble();
-                              if (watts is double) return watts;
-                              if (watts is String) return double.tryParse(watts) ?? 0.0;
-                              return 0.0; // Default to 0 if no valid watts
-                            },
-                            color: const Color(0xFF4CAF50),
-                            animationDuration: 1000,
-                            enableTooltip: true,
-                            markerSettings: const MarkerSettings(isVisible: true),
-                            name: "Energy Usage",
+                else
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: true,
+                      physics: const ClampingScrollPhysics(),
+                      clipBehavior: Clip.hardEdge,
+                      itemCount: dailyStats.length,
+                      itemBuilder: (context, index) {
+                        final stat = dailyStats[index];
+                        return SizedBox(
+                          width: 140,
+                          child: Card(
+                            margin: const EdgeInsets.only(right: 12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    stat['date'] ?? 'Unknown',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Avg: ${(stat['avg_watts'] as num).toStringAsFixed(1)} W",
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                  ),
+                                  Text(
+                                    "Max: ${(stat['max_watts'] as num).toStringAsFixed(1)} W",
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                  ),
+                                  Text(
+                                    "Min: ${(stat['min_watts'] as num).toStringAsFixed(1)} W",
+                                    style: const TextStyle(fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: false,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          // Graphical line from 0 to currentWatts
-                          LineSeries<Map<String, dynamic>, DateTime>(
-                            dataSource: zeroToCurrentLine,
-                            xValueMapper: (data, _) {
-                              try {
-                                return DateTime.parse(data['timestamp']);
-                              } catch (e) {
-                                return DateTime.now();
-                              }
-                            },
-                            yValueMapper: (data, _) {
-                              final watts = data['watts'];
-                              if (watts is int) return watts.toDouble();
-                              if (watts is double) return watts;
-                              if (watts is String) return double.tryParse(watts) ?? 0.0;
-                              return 0.0;
-                            },
-                            color: Colors.orange,
-                            width: 3,
-                            dashArray: <double>[6, 3],
-                            markerSettings: const MarkerSettings(isVisible: false),
-                            name: "Current Watts Line",
-                          ),
-                        ],
-                        zoomPanBehavior: ZoomPanBehavior(
-                          enablePinching: true,
-                          enablePanning: true,
-                          zoomMode: ZoomMode.xy,
-                        ),
-                        tooltipBehavior: TooltipBehavior(
-                          enable: true,
-                          format: 'Energy: point.y W\nTime: point.x',
-                        ),
-                        legend: Legend(
-                          isVisible: true,
-                          position: LegendPosition.bottom,
-                        ),
-                      )
-                    : const Center(
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 20),
+              ],
+              SizedBox(
+                width: double.infinity,
+                height: chartHeight,
+                child: _isLoadingHistorical
+                    ? const Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.timeline, size: 64, color: Colors.grey),
+                            CircularProgressIndicator(color: Color(0xFF4CAF50)),
                             SizedBox(height: 16),
-                            Text("No history data available.",
-                                style: TextStyle(color: Colors.grey, fontSize: 18)),
-                            SizedBox(height: 8),
-                            Text("Click 'Load Historical Data' to fetch from logs",
-                                style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            Text("Loading historical data from logs...",
+                                style: TextStyle(color: Colors.grey, fontSize: 16)),
                           ],
-                        )),
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 1),
-                child: _isLoadingHistorical 
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text("Day View"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                        ),
+                      )
+                    : sortedData.isNotEmpty
+                        ? SfCartesianChart(
+                            primaryXAxis: DateTimeAxis(
+                              dateFormat: DateFormat.MMMd().add_Hm(),
+                              intervalType: DateTimeIntervalType.hours,
+                              majorGridLines: const MajorGridLines(width: 0.5),
+                            ),
+                            primaryYAxis: NumericAxis(
+                              title: AxisTitle(text: "Watts"),
+                              majorGridLines: const MajorGridLines(width: 0.5),
+                            ),
+                            series: [
+                              // Main energy history spline
+                              SplineSeries<Map<String, dynamic>, DateTime>(
+                                dataSource: sortedData,
+                                xValueMapper: (data, _) {
+                                  try {
+                                    return DateTime.parse(data['timestamp']);
+                                  } catch (e) {
+                                    return DateTime.now(); // Fallback to current time if parsing fails
+                                  }
+                                },
+                                yValueMapper: (data, _) {
+                                  final watts = data['watts'];
+                                  if (watts is int) return watts.toDouble();
+                                  if (watts is double) return watts;
+                                  if (watts is String) return double.tryParse(watts) ?? 0.0;
+                                  return 0.0; // Default to 0 if no valid watts
+                                },
+                                color: const Color(0xFF4CAF50),
+                                animationDuration: 1000,
+                                enableTooltip: true,
+                                markerSettings: const MarkerSettings(isVisible: true),
+                                name: "Energy Usage",
+                              ),
+                              // Graphical line from 0 to currentWatts
+                              LineSeries<Map<String, dynamic>, DateTime>(
+                                dataSource: zeroToCurrentLine,
+                                xValueMapper: (data, _) {
+                                  try {
+                                    return DateTime.parse(data['timestamp']);
+                                  } catch (e) {
+                                    return DateTime.now();
+                                  }
+                                },
+                                yValueMapper: (data, _) {
+                                  final watts = data['watts'];
+                                  if (watts is int) return watts.toDouble();
+                                  if (watts is double) return watts;
+                                  if (watts is String) return double.tryParse(watts) ?? 0.0;
+                                  return 0.0;
+                                },
+                                color: Colors.orange,
+                                width: 3,
+                                dashArray: <double>[6, 3],
+                                markerSettings: const MarkerSettings(isVisible: false),
+                                name: "Current Watts Line",
+                              ),
+                            ],
+                            zoomPanBehavior: ZoomPanBehavior(
+                              enablePinching: true,
+                              enablePanning: true,
+                              zoomMode: ZoomMode.xy,
+                            ),
+                            tooltipBehavior: TooltipBehavior(
+                              enable: true,
+                              format: 'Energy: point.y W\nTime: point.x',
+                            ),
+                            legend: Legend(
+                              isVisible: true,
+                              position: LegendPosition.bottom,
+                            ),
+                          )
+                        : const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.timeline, size: 64, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text("No history data available.",
+                                    style: TextStyle(color: Colors.grey, fontSize: 18)),
+                                SizedBox(height: 8),
+                                Text("Click 'Load Historical Data' to fetch from logs",
+                                    style: TextStyle(color: Colors.grey, fontSize: 14)),
+                              ],
+                            )),
               ),
-              ElevatedButton(
-                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
-                child: _isLoadingHistorical 
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text("Week View"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              ),
-              ElevatedButton(
-                onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 30),
-                child: _isLoadingHistorical 
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text("Month View"),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              const SizedBox(height: 20),
+              // Responsive button layout - wrap on small screens, row on larger screens
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < 400) {
+                    // Stack buttons vertically on small screens
+                    return Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 1),
+                            child: _isLoadingHistorical 
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Text("Day View"),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
+                            child: _isLoadingHistorical 
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Text("Week View"),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 30),
+                            child: _isLoadingHistorical 
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Text("Month View"),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Use row layout on larger screens
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: ElevatedButton(
+                              onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 1),
+                              child: _isLoadingHistorical 
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Text("Day View"),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: ElevatedButton(
+                              onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 7),
+                              child: _isLoadingHistorical 
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Text("Week View"),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: ElevatedButton(
+                              onPressed: _isLoadingHistorical ? null : () => _fetchHistoricalData(days: 30),
+                              child: _isLoadingHistorical 
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Text("Month View"),
+                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildProfilePage() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Energy Profile",
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 20),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _loadProfiles(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final profiles = snapshot.data!;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    DropdownButton<String>(
-                      value: ownerName.isNotEmpty
-                          ? ownerName
-                          : (profiles.isNotEmpty ? profiles[0]['name'] : null),
-                      hint: const Text("Select Profile",
-                          style: TextStyle(color: Colors.white)),
-                      dropdownColor: const Color(0xFF2A3555),
-                      items: profiles.map((profile) {
-                        return DropdownMenuItem<String>(
-                          value: profile['name'],
-                          child: Text(profile['name'],
-                              style: const TextStyle(color: Colors.white)),
-                        );
-                      }).toList(),
-                      onChanged: (value) async {
-                        if (value != null) {
-                          final selected =
-                              profiles.firstWhere((p) => p['name'] == value);
-                          setState(() {
-                            ownerName = selected['name'];
-                            _avatarImage = selected['avatarPath'] != null &&
-                                    selected['avatarPath'].isNotEmpty
-                                ? File(selected['avatarPath'])
-                                : null;
-                            _achievements =
-                                List<String>.from(selected['achievements'] ?? []);
-                            _energyScore = selected['energyScore'] ?? 0.0;
-                          });
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add, color: Colors.white),
-                      onPressed: () async {
-                        final newProfile = await _showCreateProfileDialog();
-                        if (newProfile != null) {
-                          await _saveProfile(newProfile);
-                          setState(() {});
-                        }
-                      },
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: GestureDetector(
-                onTap: _pickAvatar,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundImage:
-                      _avatarImage != null ? FileImage(_avatarImage!) : null,
-                  child: _avatarImage == null
-                      ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                      : null,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Card(
-              elevation: 10,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Name: $ownerName",
-                        style: const TextStyle(
-                            fontSize: 22, color: Color.fromARGB(255, 6, 6, 6))),
-                    const SizedBox(height: 15),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Energy Score",
-                            style: TextStyle(
-                                fontSize: 18, color: Color(0xFF4CAF50))),
-                        Text("${(_energyScore * 100).toStringAsFixed(0)}%",
-                            style: const TextStyle(
-                                fontSize: 18,
-                                color: Color(0xFF4CAF50),
-                                fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    LinearProgressIndicator(
-                      value: _energyScore,
-                      backgroundColor: Colors.grey[300],
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
-                      minHeight: 10,
-                    ),
-                    const SizedBox(height: 20),
-                    Text("Achievements",
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall!
-                            .copyWith(fontSize: 20)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 10,
-                      children: [
-                        _buildAchievementChip("Eco Warrior", Colors.green[700]!,
-                            _achievements.contains("Eco Warrior")),
-                        _buildAchievementChip("Peak Saver", Colors.blue[700]!,
-                            _achievements.contains("Peak Saver")),
-                        _buildAchievementChip("Solar Star", Colors.yellow[700]!,
-                            _achievements.contains("Solar Star")),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EnergyChallengeScreen(
-                      onAchievementsEarned: (earned, score) async {
-                        setState(() {
-                          for (final a in earned) {
-                            if (!_achievements.contains(a)) _achievements.add(a);
+    return LayoutBuilder(
+      builder: (context, constraints) => Padding(
+        padding: EdgeInsets.all(constraints.maxWidth < 400 ? 12.0 : 24.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Energy Profile",
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(fontSize: constraints.maxWidth < 400 ? 16 : 24)),
+              const SizedBox(height: 20),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _loadProfiles(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final profiles = snapshot.data!;
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DropdownButton<String>(
+                        value: ownerName.isNotEmpty
+                            ? ownerName
+                            : (profiles.isNotEmpty ? profiles[0]['name'] : null),
+                        hint: const Text("Select Profile",
+                            style: TextStyle(color: Colors.white)),
+                        dropdownColor: const Color(0xFF2A3555),
+                        items: profiles.map((profile) {
+                          return DropdownMenuItem<String>(
+                            value: profile['name'],
+                            child: Text(profile['name'],
+                                style: const TextStyle(color: Colors.white)),
+                          );
+                        }).toList(),
+                        onChanged: (value) async {
+                          if (value != null) {
+                            final selected =
+                                profiles.firstWhere((p) => p['name'] == value);
+                            setState(() {
+                              ownerName = selected['name'];
+                              _avatarImage = selected['avatarPath'] != null &&
+                                      selected['avatarPath'].isNotEmpty
+                                  ? File(selected['avatarPath'])
+                                  : null;
+                              _achievements =
+                                  List<String>.from(selected['achievements'] ?? []);
+                              _energyScore = selected['energyScore'] ?? 0.0;
+                            });
                           }
-                          _energyScore = score;
-                        });
-                        await _updateCurrentProfile();
-                      },
-                    ),
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        onPressed: () async {
+                          final newProfile = await _showCreateProfileDialog();
+                          if (newProfile != null) {
+                            await _saveProfile(newProfile);
+                            setState(() {});
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: GestureDetector(
+                  onTap: _pickAvatar,
+                  child: CircleAvatar(
+                    radius: constraints.maxWidth < 400 ? 40 : 60,
+                    backgroundImage:
+                        _avatarImage != null ? FileImage(_avatarImage!) : null,
+                    child: _avatarImage == null
+                        ? Icon(Icons.person, size: constraints.maxWidth < 400 ? 40 : 60, color: Colors.grey)
+                        : null,
                   ),
-                );
-              },
-              child: const Text("Take Energy Challenge"),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            ),
-          ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: EdgeInsets.all(constraints.maxWidth < 400 ? 10 : 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Name: $ownerName",
+                          style: TextStyle(
+                              fontSize: constraints.maxWidth < 400 ? 16 : 22, color: const Color.fromARGB(255, 6, 6, 6))),
+                      const SizedBox(height: 15),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text("Energy Score",
+                              style: TextStyle(
+                                  fontSize: 18, color: Color(0xFF4CAF50))),
+                          Text("${(_energyScore * 100).toStringAsFixed(0)}%",
+                              style: const TextStyle(
+                                  fontSize: 18,
+                                  color: Color(0xFF4CAF50),
+                                  fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      LinearProgressIndicator(
+                        value: _energyScore,
+                        backgroundColor: Colors.grey[300],
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                        minHeight: 10,
+                      ),
+                      const SizedBox(height: 20),
+                      Text("Achievements",
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall!
+                              .copyWith(fontSize: constraints.maxWidth < 400 ? 16 : 20)),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 10,
+                        children: [
+                          _buildAchievementChip("Eco Warrior", Colors.green[700]!,
+                              _achievements.contains("Eco Warrior")),
+                          _buildAchievementChip("Peak Saver", Colors.blue[700]!,
+                              _achievements.contains("Peak Saver")),
+                          _buildAchievementChip("Solar Star", Colors.yellow[700]!,
+                              _achievements.contains("Solar Star")),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EnergyChallengeScreen(
+                        onAchievementsEarned: (earned, score) async {
+                          setState(() {
+                            for (final a in earned) {
+                              if (!_achievements.contains(a)) _achievements.add(a);
+                            }
+                            _energyScore = score;
+                          });
+                          await _updateCurrentProfile();
+                        },
+                      ),
+                    ),
+                  );
+                },
+                child: const Text("Take Energy Challenge"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              ),
+            ],
+          ),
         ),
       ),
     );
