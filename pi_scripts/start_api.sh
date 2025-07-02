@@ -28,7 +28,7 @@ touch api.log
 touch energy_monitor.log
 
 # Start the API server with logging
-echo "🔌 Starting server with logging enabled..."
+echo "   Starting server with logging enabled..."
 echo "   Press Ctrl+C to stop the server"
 echo "   Logs will be saved to api.log"
 echo ""
