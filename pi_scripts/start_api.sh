@@ -3,7 +3,6 @@
 # Activate the virtual environment
 source /home/ian0407/venv/bin/activate
 
-
 # Energy Monitor API Startup Script
 echo "Starting Energy Monitor API Server..."
 
