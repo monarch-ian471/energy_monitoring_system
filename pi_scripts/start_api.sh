@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Activate the virtual environment
+source /home/ian0407/venv/bin/activate
+
 # Energy Monitor API Startup Script
 echo "Starting Energy Monitor API Server..."
 
@@ -19,8 +22,8 @@ fi
 
 # Get the local IP address for network access
 LOCAL_IP=$(hostname -I | awk '{print $1}')
-echo "API will be available at: http://192.168.1.138:8000"
-echo "Update your Flutter app's apiBaseUrl to: http://192.168.1.138:8000"
+echo "API will be available at: http://$LOCAL_IP:8000"
+echo "Update your Flutter app's apiBaseUrl to: http://$LOCAL_IP:8000"
 
 # Create log directory if it doesn't exist
 echo "Setting up logging..."
