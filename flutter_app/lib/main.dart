@@ -21,7 +21,7 @@ const bool useDummyData = false;
 // Configurable API base URL (switches to mock server for dummy data)
 const String apiBaseUrl = useDummyData
     ? 'https://5ed82b73-5ed4-4c32-99b2-47b88a17336d.mock.pstmn.io'
-    : 'http://localhost:8000';
+    : 'http://192.168.1.138:8000';
 
 // Theme Provider (Managing and switching between dark and light theme)
 class ThemeProvider extends ChangeNotifier {
