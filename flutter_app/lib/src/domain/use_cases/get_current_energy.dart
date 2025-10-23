@@ -6,7 +6,8 @@ class GetCurrentEnergy {
 
   GetCurrentEnergy(this.repository);
 
-  Future<EnergyData> call() async {
-    return await repository.getCurrentEnergy();
+  Future<EnergyData> call({int applianceId = 1}) async {
+    // Added param
+    return await repository.getCurrentEnergy(applianceId: applianceId);
   }
 }

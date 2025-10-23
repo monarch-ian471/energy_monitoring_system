@@ -6,7 +6,7 @@ class GetEnergyHistory {
 
   GetEnergyHistory(this.repository);
 
-  Future<List<EnergyData>> call() async {
-    return await repository.getEnergyHistory();
+  Future<List<EnergyData>> call({required int applianceId}) async {
+    return await repository.getEnergyHistory(applianceId: applianceId);
   }
 }

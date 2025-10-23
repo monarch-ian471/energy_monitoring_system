@@ -10,6 +10,7 @@ class EnergyData with _$EnergyData {
   const factory EnergyData({
     required String timestamp,
     required double watts,
+    required int applianceId,
   }) = _EnergyData;
 
   factory EnergyData.fromJson(Map<String, dynamic> json) =>

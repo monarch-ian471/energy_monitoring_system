@@ -71,11 +71,11 @@ async def health_check():
         )
 
 @app.get("/energy")
-async def get_energy():
+async def get_energy(appliance_id: int = Query(1)):
     try:
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
-        c.execute("SELECT timestamp, watts FROM usage ORDER BY timestamp DESC LIMIT 1")
+        c.execute("SELECT timestamp, watts FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT 1", (appliance_id,))
         data = c.fetchone()
         conn.close()
         if data:
@@ -89,7 +89,7 @@ async def get_history():
     try:
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
-        c.execute("SELECT timestamp, watts FROM usage ORDER BY timestamp DESC LIMIT 24")
+        c.execute("SELECT timestamp, watts FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT 24", (appliance_id,))
         data = c.fetchall()
         conn.close()
         # Return in the format expected by Flutter app

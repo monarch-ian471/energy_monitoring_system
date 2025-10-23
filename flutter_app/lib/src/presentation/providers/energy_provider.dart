@@ -1,5 +1,6 @@
 import 'package:energy_monitor_app/src/data/datatsources/local/sqlite_datasource.dart';
 import 'package:energy_monitor_app/src/data/datatsources/remote/api_datasource.dart';
+import 'package:riverpod/legacy.dart' show StateProvider;
 import 'package:riverpod/riverpod.dart';
 import '../../data/repositories/energy_repository_impl.dart';
 import '../../domain/use_cases/get_current_energy.dart';
@@ -26,9 +27,11 @@ final getEnergyHistoryProvider = Provider<GetEnergyHistory>((ref) {
 });
 
 final currentEnergyProvider = FutureProvider<EnergyData>((ref) async {
-  return ref.watch(getCurrentEnergyProvider).call();
+  return ref.watch(getCurrentEnergyProvider).call(applianceId: 1);
 });
 
 final energyHistoryProvider = FutureProvider<List<EnergyData>>((ref) async {
-  return ref.watch(getEnergyHistoryProvider).call();
+  return ref.watch(getEnergyHistoryProvider).call(applianceId: 1);
 });
+
+final selectedApplianceProvider = StateProvider<int>((ref) => 1);

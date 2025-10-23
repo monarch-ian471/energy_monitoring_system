@@ -22,6 +22,7 @@ EnergyData _$EnergyDataFromJson(Map<String, dynamic> json) {
 mixin _$EnergyData {
   String get timestamp => throw _privateConstructorUsedError;
   double get watts => throw _privateConstructorUsedError;
+  int get applianceId => throw _privateConstructorUsedError;
 
   /// Serializes this EnergyData to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -39,7 +40,7 @@ abstract class $EnergyDataCopyWith<$Res> {
           EnergyData value, $Res Function(EnergyData) then) =
       _$EnergyDataCopyWithImpl<$Res, EnergyData>;
   @useResult
-  $Res call({String timestamp, double watts});
+  $Res call({String timestamp, double watts, int applianceId});
 }
 
 /// @nodoc
@@ -59,6 +60,7 @@ class _$EnergyDataCopyWithImpl<$Res, $Val extends EnergyData>
   $Res call({
     Object? timestamp = null,
     Object? watts = null,
+    Object? applianceId = null,
   }) {
     return _then(_value.copyWith(
       timestamp: null == timestamp
@@ -69,6 +71,10 @@ class _$EnergyDataCopyWithImpl<$Res, $Val extends EnergyData>
           ? _value.watts
           : watts // ignore: cast_nullable_to_non_nullable
               as double,
+      applianceId: null == applianceId
+          ? _value.applianceId
+          : applianceId // ignore: cast_nullable_to_non_nullable
+              as int,
     ) as $Val);
   }
 }
@@ -81,7 +87,7 @@ abstract class _$$EnergyDataImplCopyWith<$Res>
       __$$EnergyDataImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String timestamp, double watts});
+  $Res call({String timestamp, double watts, int applianceId});
 }
 
 /// @nodoc
@@ -99,6 +105,7 @@ class __$$EnergyDataImplCopyWithImpl<$Res>
   $Res call({
     Object? timestamp = null,
     Object? watts = null,
+    Object? applianceId = null,
   }) {
     return _then(_$EnergyDataImpl(
       timestamp: null == timestamp
@@ -109,6 +116,10 @@ class __$$EnergyDataImplCopyWithImpl<$Res>
           ? _value.watts
           : watts // ignore: cast_nullable_to_non_nullable
               as double,
+      applianceId: null == applianceId
+          ? _value.applianceId
+          : applianceId // ignore: cast_nullable_to_non_nullable
+              as int,
     ));
   }
 }
@@ -116,7 +127,10 @@ class __$$EnergyDataImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$EnergyDataImpl implements _EnergyData {
-  const _$EnergyDataImpl({required this.timestamp, required this.watts});
+  const _$EnergyDataImpl(
+      {required this.timestamp,
+      required this.watts,
+      required this.applianceId});
 
   factory _$EnergyDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$EnergyDataImplFromJson(json);
@@ -125,10 +139,12 @@ class _$EnergyDataImpl implements _EnergyData {
   final String timestamp;
   @override
   final double watts;
+  @override
+  final int applianceId;
 
   @override
   String toString() {
-    return 'EnergyData(timestamp: $timestamp, watts: $watts)';
+    return 'EnergyData(timestamp: $timestamp, watts: $watts, applianceId: $applianceId)';
   }
 
   @override
@@ -164,7 +180,8 @@ class _$EnergyDataImpl implements _EnergyData {
 abstract class _EnergyData implements EnergyData {
   const factory _EnergyData(
       {required final String timestamp,
-      required final double watts}) = _$EnergyDataImpl;
+      required final double watts,
+      required final int applianceId}) = _$EnergyDataImpl;
 
   factory _EnergyData.fromJson(Map<String, dynamic> json) =
       _$EnergyDataImpl.fromJson;
@@ -173,6 +190,8 @@ abstract class _EnergyData implements EnergyData {
   String get timestamp;
   @override
   double get watts;
+  @override
+  int get applianceId;
 
   /// Create a copy of EnergyData
   /// with the given fields replaced by the non-null parameter values.

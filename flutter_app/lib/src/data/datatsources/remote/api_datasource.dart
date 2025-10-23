@@ -4,8 +4,9 @@ import '../../../core/constants.dart';
 import '../../../domain/entities/energy_data.dart';
 
 class ApiDataSource {
-  Future<EnergyData> getCurrentEnergy() async {
-    final response = await http.get(Uri.parse('$apiBaseUrl/energy'));
+  Future<EnergyData> getCurrentEnergy({int applianceId = 1}) async {
+    final response = await http
+        .get(Uri.parse('$apiBaseUrl/energy?applianceId=$applianceId'));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return EnergyData.fromJson(data);
@@ -14,8 +15,9 @@ class ApiDataSource {
     }
   }
 
-  Future<List<EnergyData>> getEnergyHistory() async {
-    final response = await http.get(Uri.parse('$apiBaseUrl/energy/history'));
+  Future<List<EnergyData>> getEnergyHistory({int applianceId = 1}) async {
+    final response = await http
+        .get(Uri.parse('$apiBaseUrl/energy/history?applianceId=$applianceId'));
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final data = json['data'] as List;

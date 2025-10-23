@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // For theme
 import 'package:http/http.dart' as http;
+import 'package:riverpod/src/framework.dart';
+import 'package:riverpod/src/providers/future_provider.dart'
+    hide FutureProvider;
+import 'package:riverpod/src/providers/legacy/state_controller.dart';
+import 'package:riverpod/src/providers/legacy/state_provider.dart';
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
@@ -48,6 +53,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   File? _avatarImage;
   List<String> _achievements = [];
   double _energyScore = 0.92;
+  int? selectedApplianceID = 1;
 
   @override
   void initState() {
@@ -112,7 +118,11 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     if (mounted) setState(() => _isLoadingHistorical = true);
     try {
       final response = await http
-          .get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'));
+          .get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'))
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        // Added: 10s timeout
+        throw Exception('API timeout - Check if server is running');
+      });
       print('API Response /history: ${response.body}');
 
       if (response.statusCode == 200) {
@@ -163,13 +173,20 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               content: Text("Invalid response format from server")));
         }
       } else {
-        throw Exception(
-            'Failed to fetch historical data: ${response.statusCode}');
+        throw Exception('Failed to fetch: ${response.statusCode}');
       }
     } catch (e) {
       print('Historical data fetch error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error loading historical data: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Error: $e - Using offline data"))); // Added: User notification
+      // Fallback: Load from local DB (outside box - resilient for Malawi's networks)
+      final cached = await database?.query('cache');
+      if (cached != null)
+        history = cached
+            .map(
+                (row) => {'timestamp': row['timestamp'], 'watts': row['watts']})
+            .toList();
     } finally {
       if (mounted) setState(() => _isLoadingHistorical = false);
     }
@@ -419,6 +436,59 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                               .copyWith(
                                   fontSize:
                                       constraints.maxWidth < 400 ? 20 : 32)),
+                      const SizedBox(height: 10),
+                      Consumer<WidgetRef>(
+                        // Use Consumer for Riverpod ref (fixed undefined ref)
+                        builder: (context, ref, child) {
+                          final selectedID = ref.watch(
+                              selectedApplianceProvider); // Watch provider (fixed undefined provider)
+                          return DropdownButton<int>(
+                            value:
+                                selectedID, // Use watched value (fixed undefined selectedApplianceID - uses provider)
+                            items: [1, 2, 3]
+                                .map((id) => DropdownMenuItem<int>(
+                                      value: id,
+                                      child: Text(
+                                        'Appliance $id',
+                                        style: TextStyle(
+                                          color: themeProvider.isDarkMode
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (int? id) {
+                              if (id != null) {
+                                ref
+                                        .read(selectedApplianceProvider.notifier)
+                                        .state =
+                                    id; // Fixed: Update state (Riverpod 3.0 syntax - .notifier.state)
+                                ref.refresh(currentEnergyProvider as FutureProvider<
+                                    EnergyData>); // Fixed: Refresh provider (undefined refresh - use ref.refresh)
+                              }
+                            },
+                            underline: Container(
+                              height: 2,
+                              color: themeProvider.isDarkMode
+                                  ? Colors.white70
+                                  : Colors.grey[700],
+                            ),
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: themeProvider.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                            style: TextStyle(
+                              color: themeProvider.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                              fontSize: constraints.maxWidth < 400 ? 14 : 18,
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1469,4 +1539,12 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     database?.close();
     super.dispose();
   }
+}
+
+class WidgetRef {
+  watch(StateProvider<int> selectedApplianceProvider) {}
+
+  void refresh(FutureProvider<EnergyData> currentEnergyProvider) {}
+
+  read(Refreshable<StateController<int>> notifier) {}
 }

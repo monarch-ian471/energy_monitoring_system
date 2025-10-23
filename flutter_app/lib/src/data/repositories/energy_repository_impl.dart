@@ -10,20 +10,20 @@ class EnergyRepositoryImpl implements EnergyRepository {
   EnergyRepositoryImpl(this.apiDataSource, this.sqliteDataSource);
 
   @override
-  Future<EnergyData> getCurrentEnergy() async {
+  Future<EnergyData> getCurrentEnergy({required int applianceId}) async {
     try {
-      return await apiDataSource.getCurrentEnergy();
+      return await apiDataSource.getCurrentEnergy(applianceId: applianceId);
     } catch (e) {
-      return await sqliteDataSource.getCurrentEnergy();
+      return await sqliteDataSource.getCurrentEnergy(applianceId: applianceId);
     }
   }
 
   @override
-  Future<List<EnergyData>> getEnergyHistory() async {
+  Future<List<EnergyData>> getEnergyHistory({required int applianceId}) async {
     try {
-      return await apiDataSource.getEnergyHistory();
+      return await apiDataSource.getEnergyHistory(applianceId: applianceId);
     } catch (e) {
-      return await sqliteDataSource.getEnergyHistory();
+      return await sqliteDataSource.getEnergyHistory(applianceId: applianceId);
     }
   }
 }

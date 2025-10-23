@@ -11,14 +11,15 @@ void main() {
     final mockRepo = MockEnergyRepository();
     final useCase = GetEnergyHistory(mockRepo);
     final mockData = [
-      EnergyData(timestamp: '2025-10-22 12:00:00', watts: 50.0)
+      EnergyData(timestamp: '2025-10-22 12:00:00', watts: 50.0, applianceId: 1),
     ];
 
-    when(mockRepo.getEnergyHistory()).thenAnswer((_) async => mockData);
+    when(mockRepo.getEnergyHistory(applianceId: 1))
+        .thenAnswer((_) async => mockData);
 
-    final result = await useCase.call();
+    final result = await useCase.call(applianceId: 1);
 
     expect(result, mockData);
-    verify(mockRepo.getEnergyHistory()).called(1);
+    verify(mockRepo.getEnergyHistory(applianceId: 1)).called(1);
   });
 }

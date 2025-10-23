@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 conn = sqlite3.connect(str(DB_PATH))
 c = conn.cursor()
-c.execute('CREATE TABLE IF NOT EXISTS usage (timestamp TEXT, watts REAL)')
+c.execute('CREATE TABLE IF NOT EXISTS usage (timestamp TEXT, watts REAL, appliance_id INTEGER)')
 conn.commit()
 
 VOLTAGE = 230.0
@@ -63,7 +63,7 @@ try:
     while True:
         power = calculate_power()
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-        c.execute('INSERT INTO usage (timestamp, watts) VALUES (?, ?)', (timestamp, power))
+        c.execute('INSERT INTO usage (timestamp, watts, appliance_id) VALUES (?, ?, ?)', (timestamp, power, 1))
         conn.commit()
         log_message = f"Time: {timestamp}, Power: {power:.2f} W"
         logger.info(log_message)
