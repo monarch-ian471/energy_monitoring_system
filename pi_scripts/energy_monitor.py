@@ -27,7 +27,13 @@ logger = logging.getLogger(__name__)
 
 conn = sqlite3.connect(str(DB_PATH))
 c = conn.cursor()
-c.execute('CREATE TABLE IF NOT EXISTS usage (timestamp TEXT, watts REAL)')
+c.execute('''CREATE TABLE IF NOT EXISTS usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT NOT NULL,
+    watts REAL NOT NULL,
+    appliance_id INTEGER DEFAULT 1,
+    appliance_name TEXT DEFAULT 'Main Appliance'
+)''')
 conn.commit()
 
 VOLTAGE = 230.0
@@ -63,11 +69,13 @@ try:
     while True:
         power = calculate_power()
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-        c.execute('INSERT INTO usage (timestamp, watts) VALUES (?, ?)', (timestamp, power))
+        appliance_id = 1
+        appliance_name = 'Main Appliance'
+        c.execute('INSERT INTO usage (timestamp, watts, appliance_id, appliance_name) VALUES (?, ?, ?, ?)', (timestamp, power, appliance_id, appliance_name))
         conn.commit()
         log_message = f"Time: {timestamp}, Power: {power:.2f} W"
         logger.info(log_message)
-        print(log_message)  # Keep console output for compatibility
+        print(log_message)  # Keep console output for real-time monitoring
         time.sleep(5)
 except KeyboardInterrupt:
     logger.info("Energy Monitor stopped by user")
