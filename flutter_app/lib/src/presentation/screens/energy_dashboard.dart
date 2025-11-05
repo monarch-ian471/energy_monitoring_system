@@ -466,7 +466,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                     value: Locale('en', ''),
                     child: Row(
                       children: [
-                        Text('🇲🇼', style: TextStyle(fontSize: 20)),
+                        Text('🇺🇸', style: TextStyle(fontSize: 20)),
                         SizedBox(width: 8),
                         Text('English'),
                       ],

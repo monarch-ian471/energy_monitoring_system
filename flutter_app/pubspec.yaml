@@ -13,8 +13,8 @@ dependencies:
   intl: ^0.20.2
   http: ^1.2.0
   sqflite: ^2.0.0+4
-  sqflite_common_ffi: ^2.3.3
-  sqflite_common_ffi_web: ^0.2.0
+  sqflite_common_ffi: ^2.3.3        # Desktop/Mobile
+  sqflite_common_ffi_web: ^0.4.1 
   fl_chart: ^1.0.0  # Replace charts_flutter
   pdf: ^3.10.8
   printing: ^5.13.2

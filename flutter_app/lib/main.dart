@@ -9,25 +9,48 @@ import 'src/core/theme/theme_provider.dart';
 import 'src/presentation/screens/onboarding_screen.dart';
 import 'src/services/notification_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // Platform check
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // FFI for web
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'src/core/error_handler.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding is initialized
 
-  await Firebase.initializeApp(); // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+    // Continue app without Firebase for offline-first design
+  }
 
-  await NotificationService().initialize(); // Initialize notifications
+  try {
+    if (!kIsWeb) {
+      await NotificationService().initialize();
+    } else {
+      // Web notifications require service worker (optional)
+      debugPrint('Web notifications require service worker setup');
+    }
+  } catch (e) {
+    debugPrint('Notification initialization failed: $e');
+  }
 
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
+    debugPrint('Flutter Error: ${details.exception}');
   };
 
-  if (kIsWeb) {
-    databaseFactory =
-        databaseFactoryFfi; // Sets factory for web SQLite (browser-based)
-  }
+  // if (kIsWeb) {
+  //   databaseFactory = databaseFactoryFfiWeb;
+  //   debugPrint('Running on Web - using sqflite_common_ffi_web');
+  // } else {
+  //   // Desktop/Mobile: Initialize FFI
+  //   sqfliteFfiInit();
+  //   databaseFactory = databaseFactoryFfi;
+  //   debugPrint('Running on Desktop/Mobile - using sqflite_ffi');
+  // }
+
   runApp(
     const ProviderScope(child: EnergyMonitorApp()),
   );
@@ -56,6 +79,7 @@ class EnergyMonitorApp extends StatelessWidget {
               Locale('ny', ''), // Chichewa
             ],
             home: const OnboardingScreen(),
+            debugShowCheckedModeBanner: false,
           );
         },
       ),
