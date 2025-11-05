@@ -60,9 +60,9 @@ class ThemeProvider extends ChangeNotifier {
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return const Color(0xFF4CAF50).withOpacity(0.5);
+          return const Color(0xFF4CAF50).withValues(alpha: 0.5);
         }
-        return Colors.grey.withOpacity(0.5);
+        return Colors.grey.withValues(alpha: 0.5);
       }),
     ),
   );

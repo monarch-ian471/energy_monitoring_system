@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1043917657336",
+    "project_id": "energymonitor-3cd28",
+    "storage_bucket": "energymonitor-3cd28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1043917657336:android:d7028e562069cd3767170d",
+        "android_client_info": {
+          "package_name": "com.iankatengeza.energy_monitor_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA85G4fc_Zq4zMYDTGxYRkpGi6j6QraWzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

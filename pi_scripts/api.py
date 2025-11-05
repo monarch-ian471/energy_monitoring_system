@@ -84,12 +84,75 @@ async def get_energy(appliance_id: int = Query(1)):
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
 
-@app.get("/energy/history")
-async def get_history():
+@app.get("/appliances")
+async def get_appliances():
+    """Get list of all appliances being monitored"""
+    try: 
+        conn = sqlite3.connect(str(DB_PATH))
+        c = conn.cursor()
+        c.execute("SELECT DISTINCT appliance_id, appliance_name FROM usage ORDER BY appliance_id")
+        data = c.fetchall()
+        conn.close()
+
+        appliances = [{"id": row[0], "name": row[1]} for row in data]
+        return {"appliances": appliances}
+    except Exception as e:
+        return {"error": f"Database error: {str(e)}"}
+
+@app.get("/energy/{appliance_id}")
+async def get_energy_for_appliance(appliance_id: int):
+    """Get the latest energy data for a specific appliance"""
     try:
         conn = sqlite3.connect(str(DB_PATH))
         c = conn.cursor()
-        c.execute("SELECT timestamp, watts FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT 24", (appliance_id,))
+        c.execute(
+            "SELECT timestamp, watts, appliance_name FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT 1", 
+            (appliance_id,)
+        )
+        data = c.fetchone()
+        conn.close()
+        
+        if data:
+            return {
+                "timestamp": data[0], 
+                "watts": data[1],
+                "appliance_id": appliance_id,
+                "appliance_name": data[2]
+            }
+        return {"error": f"No data for appliance {appliance_id}"}
+    except Exception as e:
+        return {"error": f"Database error: {str(e)}"}
+
+@app.get("/energy/history/{appliance_id}")
+async def get_history_for_appliance(appliance_id: int, limit: int = 24):
+    """Get historical data for specific appliance"""
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        c = conn.cursor()
+        c.execute(
+            "SELECT timestamp, watts FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT ?",
+            (appliance_id, limit)
+        )
+        data = c.fetchall()
+        conn.close()
+
+        return {
+            "appliance_id": appliance_id,
+            "data": [{"timestamp": row[0], "watts": row[1]} for row in data]
+        }
+    except Exception as e:
+        return {"error": f"Database error: {str(e)}"}
+
+@app.get("/energy/history")
+async def get_history(appliance_id: int = 1):
+    """Get energy history for specific appliance (defaults to appliance 1)"""
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        c = conn.cursor()
+        c.execute(
+            "SELECT timestamp, watts FROM usage WHERE appliance_id = ? ORDER BY timestamp DESC LIMIT 24", 
+            (appliance_id,)
+        )
         data = c.fetchall()
         conn.close()
         # Return in the format expected by Flutter app

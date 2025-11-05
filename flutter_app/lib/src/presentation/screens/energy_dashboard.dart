@@ -1,11 +1,8 @@
+import 'package:energy_monitor_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // For theme
 import 'package:http/http.dart' as http;
-import 'package:riverpod/src/framework.dart';
-import 'package:riverpod/src/providers/future_provider.dart'
-    hide FutureProvider;
-import 'package:riverpod/src/providers/legacy/state_controller.dart';
-import 'package:riverpod/src/providers/legacy/state_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
@@ -14,7 +11,6 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -25,22 +21,25 @@ import '../../core/constants.dart';
 import '../../presentation/widgets/ai_energy_insights.dart';
 import '../../presentation/providers/energy_provider.dart';
 import '../screens/energy_challenge_screen.dart';
-import '../../domain/entities/energy_data.dart';
+// import '../../domain/entities/energy_data.dart';
+import '../../services/notification_service.dart';
 
-class EnergyDashboard extends StatefulWidget {
+class EnergyDashboard extends ConsumerStatefulWidget {
   final String initialName;
   const EnergyDashboard({super.key, required this.initialName});
 
   @override
-  State<EnergyDashboard> createState() => _EnergyDashboardState();
+  ConsumerState<EnergyDashboard> createState() => _EnergyDashboardState();
 }
 
-class _EnergyDashboardState extends State<EnergyDashboard>
+class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     with SingleTickerProviderStateMixin {
   String currentWatts = "0"; // Initial default
   List<Map<String, dynamic>> history = []; // Initial default
   List<Map<String, dynamic>> historicalData = [];
   List<Map<String, dynamic>> dailyStats = [];
+  List<Map<String, dynamic>> appliances = [];
+  String selectedApplianceName = "Main Appliance";
   String ownerName = "";
   Database? database;
   bool advancedMode = false;
@@ -53,13 +52,21 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   File? _avatarImage;
   List<String> _achievements = [];
   double _energyScore = 0.92;
-  int? selectedApplianceID = 1;
 
   @override
   void initState() {
     super.initState();
     ownerName = widget.initialName;
     _initDatabase();
+
+    _fetchAppliances().then((_) {
+      _fetchData().then((_) {
+        if (mounted) setState(() => _isFetching = false);
+      }).catchError((e) {
+        print('Fetch Error: $e');
+        if (mounted) setState(() => _isFetching = false);
+      });
+    });
 
     _initSpeech();
     _animationController = AnimationController(
@@ -98,12 +105,6 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     } catch (e) {
       print('Speech/TTS initialization error: $e');
     }
-  }
-
-  // ignore: unused_element
-  Future<void> _generatePdfReport() async {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("PDF Report Generated!")));
   }
 
   Future<void> _pickAvatar() async {
@@ -192,6 +193,103 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     }
   }
 
+  Future<void> _fetchData() async {
+    if (mounted) setState(() => _isFetching = true);
+    final selectedApplianceId = ref.read(selectedApplianceProvider);
+    try {
+      // UPDATE THESE URLS TO INCLUDE APPLIANCE ID:
+      final currentResponse = await http
+          .get(Uri.parse('$apiBaseUrl/energy?applianceId=$selectedApplianceId'))
+          .timeout(const Duration(seconds: 10));
+
+      final historyResponse = await http
+          .get(Uri.parse(
+              '$apiBaseUrl/energy/history?applianceId=$selectedApplianceId'))
+          .timeout(const Duration(seconds: 10));
+
+      print('API Response /energy: ${currentResponse.body}');
+      print('API Response /history: ${historyResponse.body}');
+
+      if (currentResponse.statusCode == 200 &&
+          historyResponse.statusCode == 200) {
+        final latest = jsonDecode(currentResponse.body);
+        final historyData = jsonDecode(historyResponse.body);
+
+        // Check if data is available
+        if (latest.containsKey('error')) {
+          print('API Error: ${latest['error']}');
+          // Fallback to cached data
+          final cached = await database?.query('cache',
+              orderBy: 'timestamp DESC', limit: 1);
+          if (cached != null && cached.isNotEmpty) {
+            setState(() {
+              currentWatts = (cached.first['watts'] as num).toStringAsFixed(2);
+            });
+          }
+          return;
+        }
+
+        final double watts = (latest['watts'] as num).toDouble();
+        final double threshold = 80.0; // 80W threshold for notification
+
+        if (watts > threshold) {
+          await NotificationService().showPeakUsageAlert(
+            watts,
+            appliance: selectedApplianceName,
+          );
+        }
+
+        setState(() {
+          currentWatts = (latest['watts'] as num).toStringAsFixed(2);
+
+          if (historyData.containsKey('data')) {
+            history = List<Map<String, dynamic>>.from(historyData['data'])
+                .map<Map<String, dynamic>>((item) {
+              return {
+                'timestamp': item['timestamp'],
+                'watts': item['watts'] is int
+                    ? (item['watts'] as int).toDouble()
+                    : item['watts'] as double,
+              };
+            }).toList();
+          }
+        });
+
+        // Cache the data
+        await database?.delete('cache');
+        for (var item in history) {
+          await database?.insert('cache',
+              {'timestamp': item['timestamp'], 'watts': item['watts']});
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(" Data refreshed for $selectedApplianceName")));
+      } else {
+        throw Exception('Failed to fetch: ${currentResponse.statusCode}');
+      }
+    } catch (e) {
+      print('Fetch error: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Using offline data")));
+
+      // Fallback: Load from cache
+      final cached = await database?.query('cache');
+      if (cached != null && cached.isNotEmpty) {
+        setState(() {
+          history = cached
+              .map((row) =>
+                  {'timestamp': row['timestamp'], 'watts': row['watts']})
+              .toList();
+          currentWatts = history.isNotEmpty
+              ? history.first['watts'].toStringAsFixed(2)
+              : "0.00";
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
+    }
+  }
+
   Future<void> _downloadLogFile(String logType) async {
     try {
       // For web platform, create a download link
@@ -250,6 +348,37 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     }
   }
 
+  Future<void> _fetchAppliances() async {
+    try {
+      final response = await http.get(Uri.parse('$apiBaseUrl/appliances'));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            appliances = List<Map<String, dynamic>>.from(data['appliances']);
+            // Only update selected if we have appliances and it's still default
+            if (appliances.isNotEmpty) {
+              final currentSelected = ref.read(selectedApplianceProvider);
+              if (currentSelected == 1 && appliances.isNotEmpty) {
+                ref.read(selectedApplianceProvider.notifier).state =
+                    appliances[0]['id'];
+                selectedApplianceName = appliances[0]['name'];
+              }
+            }
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching appliances: $e');
+      // Fallback: assume single appliance
+      setState(() {
+        appliances = [
+          {'id': 1, 'name': 'Main Appliance'}
+        ];
+      });
+    }
+  }
+
   Future<void> _showLogDownloadDialog() async {
     return showDialog(
       context: context,
@@ -292,6 +421,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     setState(() => _isFetching = true);
     try {
       await Future.wait([
+        _fetchData(),
         _fetchHistoricalData(days: 7),
       ]);
     } catch (e) {
@@ -314,8 +444,47 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                   width: 40,
                   height: 40),
             ),
-            title: const Text("Energy Monitor"),
+            title: Text(AppLocalizations.of(context)!.appTitle),
             actions: [
+              //Language Switcher
+              PopupMenuButton<Locale>(
+                icon: const Icon(Icons.language),
+                tooltip: 'Change Language / Sinthani Chilankulo',
+                onSelected: (Locale locale) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        locale.languageCode == 'en'
+                            ? 'Language change to English'
+                            : 'Chilankhulo chasintha ku Chichewa',
+                      ),
+                    ),
+                  );
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: Locale('en', ''),
+                    child: Row(
+                      children: [
+                        Text('🇲🇼', style: TextStyle(fontSize: 20)),
+                        SizedBox(width: 8),
+                        Text('English'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: Locale('ny', ''),
+                    child: Row(
+                      children: [
+                        Text('🇲🇼', style: TextStyle(fontSize: 20)),
+                        SizedBox(width: 8),
+                        Text('Chichewa'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
               IconButton(
                   icon: const Icon(Icons.download),
                   onPressed: _showLogDownloadDialog),
@@ -333,6 +502,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
               ),
               Switch(
                   value: advancedMode,
+                  // ignore: deprecated_member_use
                   activeColor: const Color(0xFF4CAF50),
                   onChanged: (value) => setState(() => advancedMode = value)),
             ],
@@ -346,13 +516,16 @@ class _EnergyDashboardState extends State<EnergyDashboard>
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                  icon: Icon(Icons.bolt), label: 'Dashboard'),
+                  icon: const Icon(Icons.bolt),
+                  label: AppLocalizations.of(context)!.dashboard),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.timeline), label: 'History'),
+                  icon: const Icon(Icons.timeline),
+                  label: AppLocalizations.of(context)!.history),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.person), label: 'Profile'),
+                  icon: const Icon(Icons.person),
+                  label: AppLocalizations.of(context)!.profile),
             ],
           ),
           floatingActionButton: FloatingActionButton(
@@ -393,6 +566,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
   }
 
   Widget _buildHomePage(String greeting) {
+    final selectedApplianceId = ref.watch(selectedApplianceProvider);
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return LayoutBuilder(
@@ -420,8 +594,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                       BoxShadow(
                           color: themeProvider.isDarkMode
                               ? Colors.black26
-                              // ignore: deprecated_member_use
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 8))
                     ],
@@ -437,63 +610,62 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                                   fontSize:
                                       constraints.maxWidth < 400 ? 20 : 32)),
                       const SizedBox(height: 10),
-                      Consumer<WidgetRef>(
-                        // Use Consumer for Riverpod ref (fixed undefined ref)
-                        builder: (context, ref, child) {
-                          final selectedID = ref.watch(
-                              selectedApplianceProvider); // Watch provider (fixed undefined provider)
-                          return DropdownButton<int>(
-                            value:
-                                selectedID, // Use watched value (fixed undefined selectedApplianceID - uses provider)
-                            items: [1, 2, 3]
-                                .map((id) => DropdownMenuItem<int>(
-                                      value: id,
-                                      child: Text(
-                                        'Appliance $id',
-                                        style: TextStyle(
-                                          color: themeProvider.isDarkMode
-                                              ? Colors.white
-                                              : Colors.black,
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: (int? id) {
-                              if (id != null) {
-                                ref
-                                        .read(selectedApplianceProvider.notifier)
-                                        .state =
-                                    id; // Fixed: Update state (Riverpod 3.0 syntax - .notifier.state)
-                                ref.refresh(currentEnergyProvider as FutureProvider<
-                                    EnergyData>); // Fixed: Refresh provider (undefined refresh - use ref.refresh)
-                              }
-                            },
-                            underline: Container(
-                              height: 2,
-                              color: themeProvider.isDarkMode
-                                  ? Colors.white70
-                                  : Colors.grey[700],
-                            ),
-                            icon: Icon(
-                              Icons.arrow_drop_down,
-                              color: themeProvider.isDarkMode
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                            style: TextStyle(
-                              color: themeProvider.isDarkMode
-                                  ? Colors.white
-                                  : Colors.black,
-                              fontSize: constraints.maxWidth < 400 ? 14 : 18,
-                            ),
-                          );
+                      DropdownButton<int>(
+                        value: selectedApplianceId,
+                        items: appliances
+                            .map((appliance) => DropdownMenuItem<int>(
+                                  value: appliance['id'],
+                                  child: Text(
+                                    appliance['name'],
+                                    style: TextStyle(
+                                      color: themeProvider.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                        onChanged: (int? id) {
+                          if (id != null) {
+                            // Update Riverpod state
+                            ref.read(selectedApplianceProvider.notifier).state =
+                                id;
+                            // Update local state
+                            setState(() {
+                              selectedApplianceName = appliances
+                                  .firstWhere((a) => a['id'] == id)['name'];
+                              _isFetching = true;
+                            });
+                            // Refresh data
+                            _fetchData().then((_) {
+                              if (mounted) setState(() => _isFetching = false);
+                            });
+                          }
                         },
+                        underline: Container(
+                          height: 2,
+                          color: themeProvider.isDarkMode
+                              ? Colors.white70
+                              : Colors.grey[700],
+                        ),
+                        icon: Icon(
+                          Icons.arrow_drop_down,
+                          color: themeProvider.isDarkMode
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                        style: TextStyle(
+                          color: themeProvider.isDarkMode
+                              ? Colors.white
+                              : Colors.black,
+                          fontSize: constraints.maxWidth < 400 ? 14 : 18,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Current Usage",
+                          Text(AppLocalizations.of(context)!.currentUsage,
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineSmall!
@@ -566,7 +738,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                   ),
                 ),
                 const SizedBox(height: 30),
-                Text("Energy Impact Scorecard",
+                Text(AppLocalizations.of(context)!.energyImpactScorecard,
                     style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                         fontSize: constraints.maxWidth < 400 ? 16 : 24)),
                 Container(
@@ -829,8 +1001,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: Colors.green.withOpacity(0.2),
+                    color: Colors.green.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.green),
                   ),
@@ -1486,7 +1657,7 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     return Chip(
       label: Text(label,
           style: TextStyle(color: achieved ? Colors.white : Colors.white54)),
-      backgroundColor: achieved ? color : color.withAlpha(77),
+      backgroundColor: achieved ? color : color.withValues(alpha: 0.3),
       avatar: achieved
           ? const Icon(Icons.check_circle, color: Colors.white, size: 20)
           : const Icon(Icons.lock_outline, color: Colors.white54, size: 20),
@@ -1539,12 +1710,4 @@ class _EnergyDashboardState extends State<EnergyDashboard>
     database?.close();
     super.dispose();
   }
-}
-
-class WidgetRef {
-  watch(StateProvider<int> selectedApplianceProvider) {}
-
-  void refresh(FutureProvider<EnergyData> currentEnergyProvider) {}
-
-  read(Refreshable<StateController<int>> notifier) {}
 }

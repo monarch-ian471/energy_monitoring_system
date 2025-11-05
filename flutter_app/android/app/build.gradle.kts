@@ -3,10 +3,11 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") version "4.4.4" apply false
 }
 
 android {
-    namespace = "com.example.myapp"
+    namespace = "com.iankatengeza.energy_monitor_app"
     compileSdk = 35  // Set to Android 14 (API 34)
     ndkVersion = "27.0.12077973"  // Set to required NDK version
 
@@ -20,14 +21,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.myapp"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId "com.iankatengeza.energy_monitor_app"
+        minSdkVersion 21  // Change from flutter.minSdkVersion to 21
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
     }
 
     buildTypes {
@@ -37,6 +35,21 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    buildscript {
+        ext.kotlin_version = '1.9.22'  // Update if older
+        repositories {
+            google()
+            mavenCentral()
+        }
+
+        dependencies {
+            classpath 'com.android.tools.build:gradle:8.1.4'
+            classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+            classpath 'com.google.gms:google-services:4.4.2'  // ADD THIS LINE
+        }
+    }
+
+    apply plugin: 'com.google.gms.google-services' 
 }
 
 flutter {

@@ -128,9 +128,7 @@ class __$$EnergyDataImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$EnergyDataImpl implements _EnergyData {
   const _$EnergyDataImpl(
-      {required this.timestamp,
-      required this.watts,
-      required this.applianceId});
+      {required this.timestamp, required this.watts, this.applianceId = 1});
 
   factory _$EnergyDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$EnergyDataImplFromJson(json);
@@ -140,6 +138,7 @@ class _$EnergyDataImpl implements _EnergyData {
   @override
   final double watts;
   @override
+  @JsonKey()
   final int applianceId;
 
   @override
@@ -154,12 +153,14 @@ class _$EnergyDataImpl implements _EnergyData {
             other is _$EnergyDataImpl &&
             (identical(other.timestamp, timestamp) ||
                 other.timestamp == timestamp) &&
-            (identical(other.watts, watts) || other.watts == watts));
+            (identical(other.watts, watts) || other.watts == watts) &&
+            (identical(other.applianceId, applianceId) ||
+                other.applianceId == applianceId));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(runtimeType, timestamp, watts);
+  int get hashCode => Object.hash(runtimeType, timestamp, watts, applianceId);
 
   /// Create a copy of EnergyData
   /// with the given fields replaced by the non-null parameter values.
@@ -181,7 +182,7 @@ abstract class _EnergyData implements EnergyData {
   const factory _EnergyData(
       {required final String timestamp,
       required final double watts,
-      required final int applianceId}) = _$EnergyDataImpl;
+      final int applianceId}) = _$EnergyDataImpl;
 
   factory _EnergyData.fromJson(Map<String, dynamic> json) =
       _$EnergyDataImpl.fromJson;
