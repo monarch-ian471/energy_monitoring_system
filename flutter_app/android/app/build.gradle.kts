@@ -1,31 +1,40 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") version "4.4.4" apply false
+    id("org.jetbrains.kotlin.android")
 }
 
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
-if (flutterVersionCode == null) {
-    flutterVersionCode = 1
+// ============================================================
+// FLUTTER VERSION CONFIGURATION
+// ============================================================
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
-if (flutterVersionName == null) {
-    flutterVersionName = "1.0.0"
-}
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toIntOrNull() ?: 1
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0.0"
 
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
+// ============================================================
+// KEYSTORE CONFIGURATION
+// ============================================================
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// ============================================================
+// ANDROID CONFIGURATION
+// ============================================================
 android {
     namespace = "com.iankatengeza.energy_monitor_app"
-    compileSdk = 35  // Set to Android 14 (API 34)
-    ndkVersion = "27.0.12077973"  // Set to required NDK version
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -33,56 +42,75 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
-        applicationId "com.iankatengeza.energy_monitor_app"
-        minSdkVersion 21  // Change from flutter.minSdkVersion to 21
-        targetSdkVersion 34 // Update to latest
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        applicationId = "com.iankatengeza.energy_monitor_app"
+        minSdk = flutter.minSdkVersion
+        targetSdk = 34
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
 
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
     }
 
+    // ============================================================
+    // SIGNING CONFIGURATION
+    // ============================================================
     signingConfigs {
-        release {
-            keyAlias keystoreProperties['key.alias']
-            keyPassword keystoreProperties['key.password']
-            storeFile file(keystoreProperties['store.file'] ? file(keystoreProperties['storeFile']): nul)
-            storePassword keystoreProperties['store.password']
+        create("release") {
+            val keystoreFile = keystoreProperties.getProperty("storeFile")
+            if (!keystoreFile.isNullOrEmpty()) {
+                storeFile = file(keystoreFile)
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
         }
     }
 
+    // ============================================================
+    // BUILD TYPES
+    // ============================================================
     buildTypes {
-        release {
+        getByName("release") {
+            // Apply signing if configured
+            val keystoreFile = keystoreProperties.getProperty("storeFile")
+            if (!keystoreFile.isNullOrEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
-
-    buildscript {
-        ext.kotlin_version = '1.9.22'  // Update if older
-        repositories {
-            google()
-            mavenCentral()
-        }
-
-        dependencies {
-            classpath 'com.android.tools.build:gradle:8.1.4'
-            classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-            classpath 'com.google.gms:google-services:4.4.2'  // ADD THIS LINE
-        }
-    }
-
-    apply plugin: 'com.google.gms.google-services' 
 }
 
+// ============================================================
+// FLUTTER CONFIGURATION
+// ============================================================
 flutter {
     source = "../.."
 }
+
+// ============================================================
+// DEPENDENCIES
+// ============================================================
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+}
+
+// ============================================================
+// APPLY GOOGLE SERVICES PLUGIN (Must be at the bottom)
+// ============================================================
+apply(plugin = "com.google.gms.google-services")
