@@ -11,6 +11,7 @@ import 'src/services/notification_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // Platform check
 import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // FFI for web
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'src/core/error_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding is initialized
@@ -18,6 +19,10 @@ void main() async {
   await Firebase.initializeApp(); // Initialize Firebase
 
   await NotificationService().initialize(); // Initialize notifications
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
 
   if (kIsWeb) {
     databaseFactory =

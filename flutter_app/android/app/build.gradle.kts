@@ -6,6 +6,22 @@ plugins {
     id("com.google.gms.google-services") version "4.4.4" apply false
 }
 
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = 1
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0.0"
+}
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.iankatengeza.energy_monitor_app"
     compileSdk = 35  // Set to Android 14 (API 34)
@@ -23,18 +39,33 @@ android {
     defaultConfig {
         applicationId "com.iankatengeza.energy_monitor_app"
         minSdkVersion 21  // Change from flutter.minSdkVersion to 21
-        targetSdkVersion flutter.targetSdkVersion
+        targetSdkVersion 34 // Update to latest
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['key.alias']
+            keyPassword keystoreProperties['key.password']
+            storeFile file(keystoreProperties['store.file'] ? file(keystoreProperties['storeFile']): nul)
+            storePassword keystoreProperties['store.password']
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
         }
     }
+
     buildscript {
         ext.kotlin_version = '1.9.22'  // Update if older
         repositories {
