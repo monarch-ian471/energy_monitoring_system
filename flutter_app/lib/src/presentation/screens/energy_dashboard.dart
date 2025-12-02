@@ -23,6 +23,7 @@ import '../../presentation/providers/energy_provider.dart';
 import '../screens/energy_challenge_screen.dart';
 // import '../../domain/entities/energy_data.dart';
 import '../../services/notification_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EnergyDashboard extends ConsumerStatefulWidget {
   final String initialName;
@@ -567,6 +568,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
 
   Widget _buildHomePage(String greeting) {
     final selectedApplianceId = ref.watch(selectedApplianceProvider);
+    final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return LayoutBuilder(
@@ -853,7 +855,9 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                             historicalData.isNotEmpty
                                 ? historicalData
                                 : history,
-                            double.tryParse(currentWatts) ?? 0.0),
+                            double.tryParse(currentWatts) ?? 0.0,
+                            apiKey // <--- Pass the key here
+                            ),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -869,6 +873,10 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 Text("Analyzing your energy data..."),
                               ],
                             );
+                          }
+
+                          if (snapshot.hasError) {
+                            return Text("Insights temporarily unavailable.");
                           }
 
                           return Text(
