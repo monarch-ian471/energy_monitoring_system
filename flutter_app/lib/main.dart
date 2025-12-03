@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
     hide Consumer, ChangeNotifierProvider;
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart'
+    show databaseFactoryFfiWeb;
 import 'src/core/theme/theme_provider.dart';
 import 'src/presentation/screens/onboarding_screen.dart';
 import 'src/services/notification_service.dart';
@@ -41,15 +44,15 @@ void main() async {
     debugPrint('Flutter Error: ${details.exception}');
   };
 
-  // if (kIsWeb) {
-  //   databaseFactory = databaseFactoryFfiWeb;
-  //   debugPrint('Running on Web - using sqflite_common_ffi_web');
-  // } else {
-  //   // Desktop/Mobile: Initialize FFI
-  //   sqfliteFfiInit();
-  //   databaseFactory = databaseFactoryFfi;
-  //   debugPrint('Running on Desktop/Mobile - using sqflite_ffi');
-  // }
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+    debugPrint('Running on Web - using sqflite_common_ffi_web');
+  } else {
+    // Desktop/Mobile: Initialize FFI
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    debugPrint('Running on Desktop/Mobile - using sqflite_ffi');
+  }
 
   runApp(
     const ProviderScope(child: EnergyMonitorApp()),
