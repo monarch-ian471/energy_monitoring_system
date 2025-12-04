@@ -18,3 +18,4 @@ pi_scripts/*.pyo
 # General
 *.log
 .DS_Store
+flutter_app/.env
