@@ -24,7 +24,7 @@ class AppLocalizationsNy extends AppLocalizations {
   String get goodEvening => 'Madzulo Abwino';
 
   @override
-  String get currentUsage => 'Kagwiritsidwe Kapadali pano';
+  String get currentUsage => 'Kagwiritsidwe Ka pano';
 
   @override
   String get energyTimeline => 'Mbiri ya Magetsi';
@@ -48,7 +48,7 @@ class AppLocalizationsNy extends AppLocalizations {
   String get refresh => 'Yambaninso';
 
   @override
-  String get peakUsage => 'Kagwiritsidwe Ntchito Kwambiri';
+  String get peakUsage => 'Kagwiritsidwe Ntchito';
 
   @override
   String get averageUsage => 'Avareji ya Kugwiritsidwe';
@@ -84,7 +84,7 @@ class AppLocalizationsNy extends AppLocalizations {
   String get highUsageAlert => 'Kugwiritsa ntchito kwambiri kwaoneka!';
 
   @override
-  String get reduceUsage => 'Ganizirani kuchepetsa kugwiritsa ntchito zida';
+  String get reduceUsage => 'Chepetsani Kagwiritsidwe';
 
   @override
   String get energyChallenge => 'Yesani Mpikisano wa Magetsi';
@@ -162,7 +162,7 @@ class AppLocalizationsNy extends AppLocalizations {
   String get loading => 'Onkhetsela...';
 
   @override
-  String get loadData => 'Onkhetsela Deta';
+  String get loadData => 'Onkhetselanso';
 
   @override
   String get loadingHistoricalData =>
