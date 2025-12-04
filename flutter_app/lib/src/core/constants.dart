@@ -1,4 +1,4 @@
 const bool useDummyData = false;
 const String apiBaseUrl = useDummyData
-    ? 'https://5ed8b73-5e4b-4f1d-9d5b-3f4b6c2c8e6f.mock.pstmn.io'
-    : 'http://localhost:8000';
+    ? 'https://6208df89-04bf-456d-bcf3-a2cac4c6dd00.mock.pstmn.io'
+    : 'http://192.168.1.140:8000';
