@@ -991,4 +991,721 @@ sudo modprobe i2c-bcm2835
 echo "i2c-dev" | sudo tee -a /etc/modules
 echo "i2c-bcm2835" | sudo tee -a /etc/modules
 
-# 
+# 5. Check PCF8591 is powered (5V, not 3.3V)
+# 6. Reboot
+sudo reboot
+```
+
+### Erratic or Zero Readings
+
+**Symptom:** Power readings are 0W, negative, or wildly fluctuating
+
+**Common Causes & Solutions:**
+
+1. **Sensor Not Clamped Properly**
+   - Ensure clamp is fully closed with audible "click"
+   - Clamp around **single hot wire only**, not both wires
+   - Orient sensor arrow with current flow direction
+
+2. **No Load Connected**
+   - Turn on appliance being monitored
+   - Check appliance is actually drawing power
+
+3. **Wrong Calibration Factor**
+   ```bash
+   # Test with known load (100W bulb)
+   python3 energy_monitor.py
+   # Adjust CALIBRATION_FACTOR until reading matches expected
+   ```
+
+4. **ADC Not Reading**
+   ```bash
+   # Test PCF8591 directly
+   python3 << 'EOF'
+   import smbus2 as smbus
+   import time
+   
+   bus = smbus.SMBus(1)
+   bus.write_byte(0x48, 0x00)
+   time.sleep(0.1)
+   for i in range(10):
+       data = bus.read_byte(0x48)
+       print(f"Raw ADC: {data}, Voltage: {(data/255.0)*3.3:.3f}V")
+       time.sleep(0.5)
+   EOF
+   ```
+
+5. **Loose Wiring**
+   - Re-seat all jumper wires
+   - Use multimeter to verify continuity
+   - Check breadboard connections
+
+### API Not Accessible from Phone/Mac
+
+**Symptom:** Flutter app can't reach API
+
+**Solutions:**
+
+1. **Verify Pi IP Address**
+   ```bash
+   hostname -I
+   # Use first IP (e.g., 192.168.1.100)
+   ```
+
+2. **Check API is Running**
+   ```bash
+   sudo systemctl status energy-api.service
+   # or
+   curl http://localhost:8000/health
+   ```
+
+3. **Test from Mac**
+   ```bash
+   # From Mac terminal
+   curl http://192.168.1.100:8000/health
+   ```
+
+4. **Firewall Issues**
+   ```bash
+   # Check if ufw is active
+   sudo ufw status
+   
+   # Allow port 8000
+   sudo ufw allow 8000/tcp
+   
+   # Or disable firewall (not recommended for production)
+   sudo ufw disable
+   ```
+
+5. **Router/Network Issues**
+   - Ensure Mac and Pi are on same network
+   - Check router isn't blocking traffic
+   - Try pinging Pi from Mac: `ping 192.168.1.100`
+
+### Database Errors
+
+**Symptom:** "Database locked" or "No such table: usage"
+
+**Solutions:**
+
+1. **Run Migration**
+   ```bash
+   cd ~/energy-monitor/pi_scripts
+   python3 migrate_database.py
+   ```
+
+2. **Check Database Permissions**
+   ```bash
+   ls -la energy_data.db
+   # Should show: -rw-r--r-- 1 pi pi
+   
+   # Fix permissions if needed
+   chmod 664 energy_data.db
+   chown pi:pi energy_data.db
+   ```
+
+3. **Database Locked**
+   ```bash
+   # Stop all services accessing database
+   sudo systemctl stop energy-monitor.service energy-api.service
+   
+   # Check for locked database
+   sudo lsof | grep energy_data.db
+   
+   # Restart services
+   sudo systemctl start energy-monitor.service energy-api.service
+   ```
+
+### High CPU Usage
+
+**Symptom:** Pi running hot, high CPU in `htop`
+
+**Solutions:**
+
+1. **Increase Sampling Interval**
+   ```python
+   # In energy_monitor.py, change:
+   time.sleep(5)  # Increase from 5 to 10 seconds
+   ```
+
+2. **Disable Uvicorn Auto-Reload**
+   ```python
+   # In run_api.py, change:
+   uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=False)
+   ```
+
+3. **Reduce Logging Verbosity**
+   ```python
+   # In logging_config.json, change:
+   "level": "WARNING"  # Instead of "INFO"
+   ```
+
+### Service Won't Start
+
+**Symptom:** `sudo systemctl start energy-monitor.service` fails
+
+**Solutions:**
+
+1. **Check Logs**
+   ```bash
+   sudo journalctl -u energy-monitor.service -n 50 --no-pager
+   ```
+
+2. **Test Manually**
+   ```bash
+   cd ~/energy-monitor/pi_scripts
+   source venv/bin/activate
+   python3 energy_monitor.py
+   # Look for error messages
+   ```
+
+3. **Common Issues:**
+   - Wrong path in service file
+   - Python dependencies missing: `pip install -r requirements.txt`
+   - I²C not enabled
+   - Permissions issue: `sudo chmod +x energy_monitor.py`
+
+## 📊 Postman Testing Guide (macOS)
+
+### Initial Setup
+
+1. **Launch Postman 11.70.6** on Mac
+2. **Create New Workspace**
+   - Name: "Energy Monitor Testing"
+   - Type: Personal
+3. **Create Collection**
+   - Name: "Raspberry Pi Energy Monitor API"
+   - Description: "Complete API endpoint tests for energy monitoring system"
+
+### Environment Configuration
+
+**Create Environment:** "Raspberry Pi Dev"
+
+**Variables to Add:**
+
+| Variable | Type | Initial Value | Current Value |
+|----------|------|---------------|---------------|
+| base_url | default | http://192.168.1.100:8000 | http://192.168.1.100:8000 |
+| appliance_id | default | 1 | 1 |
+| days_lookback | default | 7 | 7 |
+| history_limit | default | 24 | 24 |
+
+**Steps:**
+1. Click "Environments" (left sidebar)
+2. Click "+" to create new environment
+3. Name it "Raspberry Pi Dev"
+4. Add variables listed above
+5. Click "Save"
+6. Select this environment from dropdown (top-right)
+
+### Request Collection Structure
+
+Create folders in your collection:
+
+```
+📁 Raspberry Pi Energy Monitor API
+  ├── 📁 1. Health & Info
+  │   ├── GET Root Info
+  │   └── GET Health Check
+  ├── 📁 2. Current Data
+  │   ├── GET Current Energy (Default)
+  │   ├── GET Current Energy (Specific Appliance)
+  │   └── GET All Appliances List
+  ├── 📁 3. Historical Data
+  │   ├── GET Energy History (Default)
+  │   ├── GET Energy History (Custom Limit)
+  │   └── GET Historical Data with Stats
+  ├── 📁 4. Log Management
+  │   ├── GET Energy Monitor Logs
+  │   ├── GET API Access Logs
+  │   └── GET Logs Summary
+  └── 📁 5. File Downloads
+      ├── GET Download Energy Log
+      └── GET Download API Log
+```
+
+### Detailed Request Configurations
+
+#### 1. Health & Info
+
+**Request 1: GET Root Info**
+```
+Method: GET
+URL: {{base_url}}/
+Headers: None required
+```
+
+**Tests Tab (add these scripts):**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has version info", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('version');
+    pm.expect(jsonData.version).to.eql('1.0.0');
+});
+
+pm.test("Response has endpoints list", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('endpoints');
+    pm.expect(jsonData.endpoints).to.have.property('current_energy');
+});
+```
+
+**Request 2: GET Health Check**
+```
+Method: GET
+URL: {{base_url}}/health
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("System is healthy", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.status).to.eql('healthy');
+});
+
+pm.test("Database is accessible", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.database).to.eql('accessible');
+});
+
+pm.test("Logs exist", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.energy_monitor_log).to.eql('exists');
+    pm.expect(jsonData.api_log).to.eql('exists');
+});
+
+pm.test("Response has timestamp", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('timestamp');
+});
+```
+
+#### 2. Current Data
+
+**Request 3: GET Current Energy (Default)**
+```
+Method: GET
+URL: {{base_url}}/energy
+Params: 
+  - Key: appliance_id | Value: {{appliance_id}}
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has required fields", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('timestamp');
+    pm.expect(jsonData).to.have.property('watts');
+});
+
+pm.test("Watts is a number", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.watts).to.be.a('number');
+});
+
+pm.test("Timestamp format is valid", function () {
+    var jsonData = pm.response.json();
+    var timestampPattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+    pm.expect(jsonData.timestamp).to.match(timestampPattern);
+});
+
+// Save current reading for comparison
+pm.environment.set("last_watts", pm.response.json().watts);
+```
+
+**Request 4: GET Current Energy (Specific Appliance)**
+```
+Method: GET
+URL: {{base_url}}/energy/{{appliance_id}}
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response includes appliance details", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('appliance_id');
+    pm.expect(jsonData).to.have.property('appliance_name');
+    pm.expect(jsonData.appliance_id).to.eql(1);
+});
+```
+
+**Request 5: GET All Appliances List**
+```
+Method: GET
+URL: {{base_url}}/appliances
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response contains appliances array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('appliances');
+    pm.expect(jsonData.appliances).to.be.an('array');
+});
+
+pm.test("At least one appliance exists", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.appliances.length).to.be.above(0);
+});
+
+pm.test("Appliance has required fields", function () {
+    var jsonData = pm.response.json();
+    var appliance = jsonData.appliances[0];
+    pm.expect(appliance).to.have.property('id');
+    pm.expect(appliance).to.have.property('name');
+});
+```
+
+#### 3. Historical Data
+
+**Request 6: GET Energy History (Default)**
+```
+Method: GET
+URL: {{base_url}}/energy/history
+Params:
+  - Key: appliance_id | Value: {{appliance_id}}
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has data array", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('data');
+    pm.expect(jsonData.data).to.be.an('array');
+});
+
+pm.test("Data array has records", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.data.length).to.be.above(0);
+});
+
+pm.test("Each record has timestamp and watts", function () {
+    var jsonData = pm.response.json();
+    jsonData.data.forEach(function(record) {
+        pm.expect(record).to.have.property('timestamp');
+        pm.expect(record).to.have.property('watts');
+    });
+});
+
+pm.test("Default returns up to 24 records", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.data.length).to.be.at.most(24);
+});
+```
+
+**Request 7: GET Energy History (Custom Limit)**
+```
+Method: GET
+URL: {{base_url}}/energy/history/{{appliance_id}}
+Params:
+  - Key: limit | Value: {{history_limit}}
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response includes appliance_id", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('appliance_id');
+    pm.expect(jsonData.appliance_id).to.eql(parseInt(pm.environment.get("appliance_id")));
+});
+
+pm.test("Data respects limit parameter", function () {
+    var jsonData = pm.response.json();
+    var limit = parseInt(pm.environment.get("history_limit"));
+    pm.expect(jsonData.data.length).to.be.at.most(limit);
+});
+```
+
+**Request 8: GET Historical Data with Stats**
+```
+Method: GET
+URL: {{base_url}}/logs/historical-data
+Params:
+  - Key: days | Value: {{days_lookback}}
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has data and daily_stats", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('data');
+    pm.expect(jsonData).to.have.property('daily_stats');
+    pm.expect(jsonData).to.have.property('total_records');
+});
+
+pm.test("Daily stats has correct structure", function () {
+    var jsonData = pm.response.json();
+    if (jsonData.daily_stats.length > 0) {
+        var stat = jsonData.daily_stats[0];
+        pm.expect(stat).to.have.property('date');
+        pm.expect(stat).to.have.property('avg_watts');
+        pm.expect(stat).to.have.property('max_watts');
+        pm.expect(stat).to.have.property('min_watts');
+        pm.expect(stat).to.have.property('total_readings');
+    }
+});
+
+pm.test("Date range matches request", function () {
+    var jsonData = pm.response.json();
+    var requestedDays = parseInt(pm.environment.get("days_lookback"));
+    pm.expect(jsonData.date_range.days).to.eql(requestedDays);
+});
+```
+
+#### 4. Log Management
+
+**Request 9: GET Energy Monitor Logs**
+```
+Method: GET
+URL: {{base_url}}/logs/energy-monitor
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response has log data", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('data');
+    pm.expect(jsonData).to.have.property('total_records');
+    pm.expect(jsonData).to.have.property('file_size');
+});
+
+pm.test("Log records have correct source", function () {
+    var jsonData = pm.response.json();
+    if (jsonData.data.length > 0) {
+        jsonData.data.forEach(function(record) {
+            pm.expect(record.source).to.eql('energy_monitor');
+        });
+    }
+});
+```
+
+**Request 10: GET API Access Logs**
+```
+Method: GET
+URL: {{base_url}}/logs/api
+Headers: None required
+```
+
+**Request 11: GET Logs Summary**
+```
+Method: GET
+URL: {{base_url}}/logs/summary
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Summary has both log types", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData).to.have.property('energy_monitor');
+    pm.expect(jsonData).to.have.property('api');
+});
+
+pm.test("Log files exist", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.energy_monitor.exists).to.be.true;
+    pm.expect(jsonData.api.exists).to.be.true;
+});
+
+pm.test("Record counts are numbers", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.energy_monitor.records).to.be.a('number');
+    pm.expect(jsonData.api.records).to.be.a('number');
+});
+```
+
+#### 5. File Downloads
+
+**Request 12: GET Download Energy Log**
+```
+Method: GET
+URL: {{base_url}}/logs/download/energy-monitor
+Headers: None required
+```
+
+**Tests Tab:**
+```javascript
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Content-Type is text/plain", function () {
+    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');
+});
+
+pm.test("Response body is not empty", function () {
+    pm.expect(pm.response.text()).to.have.lengthOf.above(0);
+});
+```
+
+**Request 13: GET Download API Log**
+```
+Method: GET
+URL: {{base_url}}/logs/download/api
+Headers: None required
+```
+
+### Running Collection Tests
+
+**Option 1: Manual Run**
+1. Click "Runner" button (top-left)
+2. Select "Raspberry Pi Energy Monitor API" collection
+3. Select "Raspberry Pi Dev" environment
+4. Click "Run Raspberry Pi Energy Monitor API"
+5. Review results
+
+**Option 2: Collection Runner Settings**
+```
+Iterations: 1
+Delay: 500ms (between requests)
+Data: None
+Save responses: Checked
+Persist variables: Checked
+```
+
+**Expected Results:**
+- All tests should pass (green checkmarks)
+- Response times < 500ms for most endpoints
+- No 404 or 500 errors
+
+### Debugging Failed Tests
+
+**If tests fail:**
+
+1. **Check Pi Connectivity**
+   ```bash
+   # From Mac terminal
+   ping 192.168.1.100
+   curl -v http://192.168.1.100:8000/health
+   ```
+
+2. **Verify Environment Variables**
+   - Check `base_url` matches Pi IP
+   - Ensure no trailing slashes in URL
+
+3. **Check Pi Services**
+   ```bash
+   # SSH into Pi
+   ssh pi@192.168.1.100
+   sudo systemctl status energy-api.service
+   ```
+
+4. **View Request/Response**
+   - Click failed request in Postman
+   - Check "Body" tab for error details
+   - Review "Console" (View → Show Postman Console)
+
+## 📈 Performance Monitoring
+
+### Key Metrics to Track
+
+1. **API Response Times**
+   - Target: < 200ms for current data
+   - Target: < 500ms for historical data
+
+2. **Database Size Growth**
+   ```bash
+   # Check database size
+   ls -lh energy_data.db
+   
+   # Count records
+   sqlite3 energy_data.db "SELECT COUNT(*) FROM usage;"
+   ```
+
+3. **Log File Sizes**
+   ```bash
+   du -h energy_monitor.log api.log
+   ```
+
+4. **System Resources**
+   ```bash
+   # CPU and memory usage
+   htop
+   
+   # Service-specific
+   systemctl status energy-monitor.service energy-api.service
+   ```
+
+### Optimization Tips
+
+1. **Add Database Indexes**
+   ```sql
+   CREATE INDEX IF NOT EXISTS idx_timestamp ON usage(timestamp DESC);
+   CREATE INDEX IF NOT EXISTS idx_appliance_time ON usage(appliance_id, timestamp DESC);
+   ```
+
+2. **Implement Log Rotation**
+   ```bash
+   # Add to /etc/logrotate.d/energy-monitor
+   /home/pi/energy-monitor/pi_scripts/*.log {
+       daily
+       rotate 7
+       compress
+       missingok
+       notifempty
+   }
+   ```
+
+3. **Database Vacuum (Weekly)**
+   ```bash
+   # Add to crontab
+   0 3 * * 0 sqlite3 /home/pi/energy-monitor/pi_scripts/energy_data.db "VACUUM;"
+   ```
+
+## 📚 Additional Resources
+
+### Documentation
+- FastAPI Docs: https://fastapi.tiangolo.com/
+- Uvicorn Docs: https://www.uvicorn.org/
+- SQLite Tutorial: https://www.sqlitetutorial.net/
+- PCF8591 Datasheet: https://www.nxp.com/docs/en/data-sheet/PCF8591.pdf
+- SCT-013 Info: https://openenergymonitor.org/
+
+### Community Support
+- Raspberry Pi Forums: https://forums.raspberrypi.com/
+- FastAPI Discord: https://discord.gg/fastapi
+- Energy Monitoring: https://community.openenergymonitor.org/
