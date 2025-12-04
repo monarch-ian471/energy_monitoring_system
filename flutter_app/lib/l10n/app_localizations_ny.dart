@@ -142,4 +142,17 @@ class AppLocalizationsNy extends AppLocalizations {
 
   @override
   String get changeLanguage => 'Sinthani Chilankhulo';
+
+  @override
+  String get loading => 'Onkhetsela...';
+
+  @override
+  String get loadData => 'Onkhetsela Deta';
+
+  @override
+  String get loadingHistoricalData =>
+      'Onkhetsela deta yakale kuchokera ku ma log...';
+
+  @override
+  String get noHistoryDataAvailable => 'Palibe deta yakale yomwe ilipo.';
 }

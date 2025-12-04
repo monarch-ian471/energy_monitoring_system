@@ -448,25 +448,20 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
             ),
             title: Text(AppLocalizations.of(context)!.appTitle),
             actions: [
-              // Language Switcher - UPDATED TO USE PROVIDER
+              // Language Switcher
               Consumer<LocaleProvider>(
                 builder: (context, localeProvider, child) {
                   return PopupMenuButton<Locale>(
                     icon: const Icon(Icons.language),
-                    tooltip: localeProvider.locale.languageCode == 'en'
-                        ? 'Change Language'
-                        : 'Sinthani Chilankhulo',
+                    tooltip: AppLocalizations.of(context)!.changeLanguage,
                     onSelected: (Locale locale) async {
                       await localeProvider.setLocale(locale);
-
-                      // Show confirmation snackbar
+                      
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              locale.languageCode == 'en'
-                                  ? 'Language changed to English'
-                                  : 'Chilankhulo chasintha ku Chichewa',
+                              AppLocalizations.of(context)!.languageChanged,
                             ),
                             duration: const Duration(seconds: 2),
                           ),
@@ -484,8 +479,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                             if (localeProvider.locale.languageCode == 'en')
                               const Padding(
                                 padding: EdgeInsets.only(left: 8),
-                                child: Icon(Icons.check,
-                                    size: 16, color: Colors.green),
+                                child: Icon(Icons.check, size: 16, color: Colors.green),
                               ),
                           ],
                         ),
@@ -500,8 +494,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                             if (localeProvider.locale.languageCode == 'ny')
                               const Padding(
                                 padding: EdgeInsets.only(left: 8),
-                                child: Icon(Icons.check,
-                                    size: 16, color: Colors.green),
+                                child: Icon(Icons.check, size: 16, color: Colors.green),
                               ),
                           ],
                         ),
@@ -514,23 +507,20 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
               IconButton(
                   icon: const Icon(Icons.download),
                   onPressed: _showLogDownloadDialog),
-
-              // Theme Toggle Button
+              
               IconButton(
                 icon: Icon(
                   themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color:
-                      themeProvider.isDarkMode ? Colors.yellow : Colors.white,
+                  color: themeProvider.isDarkMode ? Colors.yellow : Colors.white,
                 ),
                 onPressed: () => themeProvider.toggleTheme(),
                 tooltip: themeProvider.isDarkMode
                     ? 'Switch to Light Mode'
                     : 'Switch to Dark Mode',
               ),
-
+              
               Switch(
                   value: advancedMode,
-                  // ignore: deprecated_member_use
                   activeColor: const Color(0xFF4CAF50),
                   onChanged: (value) => setState(() => advancedMode = value)),
             ],
@@ -541,6 +531,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                 FadeTransition(opacity: animation, child: child),
             child: getCurrentPage(),
           ),
+          
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
@@ -580,9 +571,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     switch (_currentIndex) {
       case 0:
         // Use local state (currentWatts & history) instead of Riverpod if the package isn't available
-        final greeting = DateTime.now().hour < 12
-            ? "Good Morning"
-            : (DateTime.now().hour < 17 ? "Good Afternoon" : "Good Evening");
+        final l10n = AppLocalizations.of(context)!; 
+          final greeting = DateTime.now().hour < 12
+              ? l10n.goodMorning
+              : DateTime.now().hour < 17
+                  ? l10n.goodAfternoon
+                  : l10n.goodEvening;
         return _buildHomePage(greeting);
       case 1:
         return _buildHistoryPage();
@@ -883,7 +877,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 ? historicalData
                                 : history,
                             double.tryParse(currentWatts) ?? 0.0,
-                            apiKey // <--- Pass the key here
+                            apiKey 
                             ),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==

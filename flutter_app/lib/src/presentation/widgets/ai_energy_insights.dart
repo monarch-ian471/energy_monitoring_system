@@ -1,6 +1,7 @@
+// flutter_app/lib/src/presentation/widgets/ai_energy_insights.dart
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AIEnergyInsightsWidget extends StatelessWidget {
   final List<Map<String, dynamic>> historicalData;
@@ -11,8 +12,6 @@ class AIEnergyInsightsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Retrieve the key from the loaded .env file
-    // We use a fallback empty string to prevent crashes, handled in logic below
     final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
 
     return FutureBuilder<String>(
@@ -107,10 +106,10 @@ class AIEnergyInsights {
       return _generateLocalInsight(historicalData, currentWatts);
     }
 
-    // 2. Try Gemini API
+    // 2. Try Gemini API with CORRECT model name
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash-exp', 
         apiKey: apiKey,
       );
 

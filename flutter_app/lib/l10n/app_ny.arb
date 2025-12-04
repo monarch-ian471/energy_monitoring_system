@@ -47,5 +47,9 @@
   "next": "Pita Patsogolo",
   "switchToChichewa": "Sinthani ku English",
   "languageChanged": "Chilankhulo chasintha ku Chichewa",
-  "changeLanguage": "Sinthani Chilankhulo"
+  "changeLanguage": "Sinthani Chilankhulo",
+  "loading": "Onkhetsela...",
+  "loadData": "Onkhetsela Deta",
+  "loadingHistoricalData": "Onkhetsela deta yakale kuchokera ku ma log...",
+  "noHistoryDataAvailable": "Palibe deta yakale yomwe ilipo."
 }

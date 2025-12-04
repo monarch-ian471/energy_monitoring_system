@@ -17,6 +17,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'src/core/fallback_localizations_delegate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,9 +83,9 @@ class EnergyMonitorApp extends StatelessWidget {
             locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
+              FallbackMaterialLocalisationsDelegate(),
+              FallbackCupertinoLocalisationsDelegate(),
               GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: const [
               Locale('en', ''), // English

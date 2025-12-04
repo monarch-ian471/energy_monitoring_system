@@ -58,40 +58,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       isLast: true),
                 ],
               ),
+              // Language toggle button
+              if (_currentPage == 0)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 10,
+                  right: 20,
+                  child: OutlinedButton.icon(
+                    onPressed: () => localeProvider.toggleLocale(),
+                    icon: Text(
+                      localeProvider.currentLanguageFlag,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    label: Text(
+                      l10n.switchToChichewa,
+                      style: TextStyle(
+                        color: themeProvider.isDarkMode
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                        color: themeProvider.isDarkMode
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 bottom: 40,
                 left: 0,
                 right: 0,
                 child: Column(
                   children: [
-                    // Language toggle button
-                    if (_currentPage == 0)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: OutlinedButton.icon(
-                          onPressed: () => localeProvider.toggleLocale(),
-                          icon: Text(
-                            localeProvider.currentLanguageFlag,
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                          label: Text(
-                            l10n.switchToChichewa,
-                            style: TextStyle(
-                              color: themeProvider.isDarkMode
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: themeProvider.isDarkMode
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(4, (index) => _buildDot(index)),

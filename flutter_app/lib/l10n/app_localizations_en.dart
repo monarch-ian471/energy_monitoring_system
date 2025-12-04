@@ -139,4 +139,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeLanguage => 'Change Language';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get loadData => 'Load Data';
+
+  @override
+  String get loadingHistoricalData => 'Loading historical data from logs...';
+
+  @override
+  String get noHistoryDataAvailable => 'No history data available.';
 }

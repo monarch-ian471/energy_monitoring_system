@@ -47,5 +47,9 @@
   "next": "Next",
   "switchToChichewa": "Switch to Chichewa",
   "languageChanged": "Language changed to English",
-  "changeLanguage": "Change Language"
+  "changeLanguage": "Change Language",
+  "loading": "Loading...",
+  "loadData": "Load Data",
+  "loadingHistoricalData": "Loading historical data from logs...",
+  "noHistoryDataAvailable": "No history data available."
 }

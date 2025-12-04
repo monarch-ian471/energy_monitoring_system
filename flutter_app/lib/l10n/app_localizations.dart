@@ -361,6 +361,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change Language'**
   String get changeLanguage;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @loadData.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Data'**
+  String get loadData;
+
+  /// No description provided for @loadingHistoricalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading historical data from logs...'**
+  String get loadingHistoricalData;
+
+  /// No description provided for @noHistoryDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No history data available.'**
+  String get noHistoryDataAvailable;
 }
 
 class _AppLocalizationsDelegate
