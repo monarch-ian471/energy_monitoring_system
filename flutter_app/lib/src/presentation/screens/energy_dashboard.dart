@@ -20,6 +20,7 @@ import '../../core/theme/theme_provider.dart';
 import '../../core/constants.dart';
 import '../../presentation/widgets/ai_energy_insights.dart';
 import '../../presentation/providers/energy_provider.dart';
+import '../providers/locale_provider.dart';
 import '../screens/energy_challenge_screen.dart';
 // import '../../domain/entities/energy_data.dart';
 import '../../services/notification_service.dart';
@@ -447,48 +448,73 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
             ),
             title: Text(AppLocalizations.of(context)!.appTitle),
             actions: [
-              //Language Switcher
-              PopupMenuButton<Locale>(
-                icon: const Icon(Icons.language),
-                tooltip: 'Change Language / Sinthani Chilankulo',
-                onSelected: (Locale locale) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        locale.languageCode == 'en'
-                            ? 'Language change to English'
-                            : 'Chilankhulo chasintha ku Chichewa',
+              // Language Switcher - UPDATED TO USE PROVIDER
+              Consumer<LocaleProvider>(
+                builder: (context, localeProvider, child) {
+                  return PopupMenuButton<Locale>(
+                    icon: const Icon(Icons.language),
+                    tooltip: localeProvider.locale.languageCode == 'en'
+                        ? 'Change Language'
+                        : 'Sinthani Chilankhulo',
+                    onSelected: (Locale locale) async {
+                      await localeProvider.setLocale(locale);
+
+                      // Show confirmation snackbar
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              locale.languageCode == 'en'
+                                  ? 'Language changed to English'
+                                  : 'Chilankhulo chasintha ku Chichewa',
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: const Locale('en', ''),
+                        child: Row(
+                          children: [
+                            const Text('🇺🇸', style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            const Text('English'),
+                            if (localeProvider.locale.languageCode == 'en')
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: Icon(Icons.check,
+                                    size: 16, color: Colors.green),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
+                      PopupMenuItem(
+                        value: const Locale('ny', ''),
+                        child: Row(
+                          children: [
+                            const Text('🇲🇼', style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            const Text('Chichewa'),
+                            if (localeProvider.locale.languageCode == 'ny')
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: Icon(Icons.check,
+                                    size: 16, color: Colors.green),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: Locale('en', ''),
-                    child: Row(
-                      children: [
-                        Text('🇺🇸', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 8),
-                        Text('English'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: Locale('ny', ''),
-                    child: Row(
-                      children: [
-                        Text('🇲🇼', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 8),
-                        Text('Chichewa'),
-                      ],
-                    ),
-                  ),
-                ],
               ),
 
               IconButton(
                   icon: const Icon(Icons.download),
                   onPressed: _showLogDownloadDialog),
+
               // Theme Toggle Button
               IconButton(
                 icon: Icon(
@@ -501,6 +527,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                     ? 'Switch to Light Mode'
                     : 'Switch to Dark Mode',
               ),
+
               Switch(
                   value: advancedMode,
                   // ignore: deprecated_member_use

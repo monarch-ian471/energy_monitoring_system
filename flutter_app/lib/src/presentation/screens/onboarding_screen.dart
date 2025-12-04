@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/theme_provider.dart';
-import 'energy_dashboard.dart'; // Navigate to dashboard
+import '../providers/locale_provider.dart';
+import '../../../l10n/app_localizations.dart';
+import 'energy_dashboard.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({Key? key}) : super(key: key);
@@ -18,8 +20,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Consumer2<ThemeProvider, LocaleProvider>(
+      builder: (context, themeProvider, localeProvider, child) {
         return Scaffold(
           body: Stack(
             children: [
@@ -28,26 +32,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 children: [
                   _buildOnboardingPage(
-                      "Welcome to Energy Monitor",
-                      "Your gateway to smart energy.",
+                      l10n.onboardingWelcomeTitle,
+                      l10n.onboardingWelcomeSubtitle,
                       "assets/animations/energy_welcome.json",
                       Colors.green,
                       themeProvider),
                   _buildOnboardingPage(
-                      "Master Your Power",
-                      "Control every watt with ease.",
+                      l10n.onboardingMasterTitle,
+                      l10n.onboardingMasterSubtitle,
                       "assets/animations/master_power.json",
                       const Color.fromARGB(255, 18, 121, 206),
                       themeProvider),
                   _buildOnboardingPage(
-                      "Track & Thrive",
-                      "See your energy story unfold.",
+                      l10n.onboardingTrackTitle,
+                      l10n.onboardingTrackSubtitle,
                       "assets/animations/track_thrive.json",
                       Colors.teal,
                       themeProvider),
                   _buildOnboardingPage(
-                      "Your Energy, Reimagined",
-                      "Offline-ready, future-proof.",
+                      l10n.onboardingFutureTitle,
+                      l10n.onboardingFutureSubtitle,
                       "assets/animations/energy_reimagined.json",
                       Colors.cyan,
                       themeProvider,
@@ -60,6 +64,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 right: 0,
                 child: Column(
                   children: [
+                    // Language toggle button
+                    if (_currentPage == 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: OutlinedButton.icon(
+                          onPressed: () => localeProvider.toggleLocale(),
+                          icon: Text(
+                            localeProvider.currentLanguageFlag,
+                            style: const TextStyle(fontSize: 20),
+                          ),
+                          label: Text(
+                            l10n.switchToChichewa,
+                            style: TextStyle(
+                              color: themeProvider.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: themeProvider.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(4, (index) => _buildDot(index)),
@@ -78,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     : const Color(0xFF2C3E50),
                               ),
                               decoration: InputDecoration(
-                                hintText: "Enter your name",
+                                hintText: l10n.enterYourName,
                                 hintStyle: TextStyle(
                                   color: themeProvider.isDarkMode
                                       ? Colors.grey[500]
@@ -102,12 +134,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        (EnergyDashboard(initialName: ownerName)
-                                            as Widget),
+                                        EnergyDashboard(initialName: ownerName)
+                                            as Widget,
                                   ),
                                 );
                               },
-                              child: const Text("Enter the Energy Monitor"),
+                              child: Text(l10n.enterEnergyMonitor),
                             ),
                           ],
                         ),
@@ -118,7 +150,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           duration: const Duration(milliseconds: 500),
                           curve: Curves.easeInOut,
                         ),
-                        child: const Text("Next"),
+                        child: Text(l10n.next),
                       ),
                   ],
                 ),

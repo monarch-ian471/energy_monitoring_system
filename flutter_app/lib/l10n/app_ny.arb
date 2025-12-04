@@ -32,5 +32,20 @@
   "downloadLogs": "Tsitsani Mafayilo",
   "selectLanguage": "Sankhani Chilankhulo",
   "achievements": "Zopambana",
-  "energyScore": "Mphoto ya Magetsi"
+  "energyScore": "Mphoto ya Magetsi",
+  
+  "onboardingWelcomeTitle": "Takulandirani ku Choyezera Magetsi",
+  "onboardingWelcomeSubtitle": "Njira yanu yopita ku magetsi anzeru.",
+  "onboardingMasterTitle": "Gwiritsani Ntchito Magetsi Anu Bwino",
+  "onboardingMasterSubtitle": "Yendetsani watt iliyonse mosavuta.",
+  "onboardingTrackTitle": "Onani ndi Kupambana",
+  "onboardingTrackSubtitle": "Onani nkhani yanu ya magetsi ikuwonekera.",
+  "onboardingFutureTitle": "Magetsi Anu, Opangidwa Mwatsopano",
+  "onboardingFutureSubtitle": "Okonzeka pa intaneti, otetezedwa tsogolo.",
+  "enterYourName": "Lembani dzina lanu",
+  "enterEnergyMonitor": "Lowani mu Choyezera Magetsi",
+  "next": "Pita Patsogolo",
+  "switchToChichewa": "Sinthani ku English",
+  "languageChanged": "Chilankhulo chasintha ku Chichewa",
+  "changeLanguage": "Sinthani Chilankhulo"
 }

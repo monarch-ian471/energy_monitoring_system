@@ -32,5 +32,20 @@
   "downloadLogs": "Download Log Files",
   "selectLanguage": "Select Language",
   "achievements": "Achievements",
-  "energyScore": "Energy Score"
+  "energyScore": "Energy Score",
+  
+  "onboardingWelcomeTitle": "Welcome to Energy Monitor",
+  "onboardingWelcomeSubtitle": "Your gateway to smart energy.",
+  "onboardingMasterTitle": "Master Your Power",
+  "onboardingMasterSubtitle": "Control every watt with ease.",
+  "onboardingTrackTitle": "Track & Thrive",
+  "onboardingTrackSubtitle": "See your energy story unfold.",
+  "onboardingFutureTitle": "Your Energy, Reimagined",
+  "onboardingFutureSubtitle": "Offline-ready, future-proof.",
+  "enterYourName": "Enter your name",
+  "enterEnergyMonitor": "Enter the Energy Monitor",
+  "next": "Next",
+  "switchToChichewa": "Switch to Chichewa",
+  "languageChanged": "Language changed to English",
+  "changeLanguage": "Change Language"
 }

@@ -97,4 +97,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get energyScore => 'Energy Score';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to Energy Monitor';
+
+  @override
+  String get onboardingWelcomeSubtitle => 'Your gateway to smart energy.';
+
+  @override
+  String get onboardingMasterTitle => 'Master Your Power';
+
+  @override
+  String get onboardingMasterSubtitle => 'Control every watt with ease.';
+
+  @override
+  String get onboardingTrackTitle => 'Track & Thrive';
+
+  @override
+  String get onboardingTrackSubtitle => 'See your energy story unfold.';
+
+  @override
+  String get onboardingFutureTitle => 'Your Energy, Reimagined';
+
+  @override
+  String get onboardingFutureSubtitle => 'Offline-ready, future-proof.';
+
+  @override
+  String get enterYourName => 'Enter your name';
+
+  @override
+  String get enterEnergyMonitor => 'Enter the Energy Monitor';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get switchToChichewa => 'Switch to Chichewa';
+
+  @override
+  String get languageChanged => 'Language changed to English';
+
+  @override
+  String get changeLanguage => 'Change Language';
 }

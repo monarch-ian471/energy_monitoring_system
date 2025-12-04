@@ -11,28 +11,43 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart'
 import 'src/core/theme/theme_provider.dart';
 import 'src/presentation/screens/onboarding_screen.dart';
 import 'src/services/notification_service.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // Platform check
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'src/presentation/providers/locale_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'src/core/error_handler.dart';
 import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensure binding is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await dotenv.load(fileName: ".env");
+    debugPrint('.env file loaded successfully');
+  } catch (e) {
+    debugPrint('Failed to load .env file: $e');
+    debugPrint('AI insights will use fallback logic');
+  }
+
+  if (kIsWeb) {
+    databaseFactory = databaseFactoryFfiWeb;
+    debugPrint('Web database initialized');
+  }
 
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    debugPrint('Firebase initialized');
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
-    // Continue app without Firebase for offline-first design
   }
 
   try {
     if (!kIsWeb) {
       await NotificationService().initialize();
+      debugPrint('Notifications initialized');
     } else {
-      // Web notifications require service worker (optional)
       debugPrint('Web notifications require service worker setup');
     }
   } catch (e) {
@@ -44,16 +59,6 @@ void main() async {
     debugPrint('Flutter Error: ${details.exception}');
   };
 
-  if (kIsWeb) {
-    databaseFactory = databaseFactoryFfiWeb;
-    debugPrint('Running on Web - using sqflite_common_ffi_web');
-  } else {
-    // Desktop/Mobile: Initialize FFI
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-    debugPrint('Running on Desktop/Mobile - using sqflite_ffi');
-  }
-
   runApp(
     const ProviderScope(child: EnergyMonitorApp()),
   );
@@ -64,13 +69,17 @@ class EnergyMonitorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
+      ],
+      child: Consumer2<ThemeProvider, LocaleProvider>(
+        builder: (context, themeProvider, localeProvider, child) {
           return MaterialApp(
             title: "Energy Monitoring",
             theme: themeProvider.themeData,
+            locale: localeProvider.locale,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
