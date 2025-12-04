@@ -20,9 +20,11 @@ import '../../core/theme/theme_provider.dart';
 import '../../core/constants.dart';
 import '../../presentation/widgets/ai_energy_insights.dart';
 import '../../presentation/providers/energy_provider.dart';
+import '../providers/locale_provider.dart';
 import '../screens/energy_challenge_screen.dart';
 // import '../../domain/entities/energy_data.dart';
 import '../../services/notification_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EnergyDashboard extends ConsumerStatefulWidget {
   final String initialName;
@@ -446,65 +448,81 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
             ),
             title: Text(AppLocalizations.of(context)!.appTitle),
             actions: [
-              //Language Switcher
-              PopupMenuButton<Locale>(
-                icon: const Icon(Icons.language),
-                tooltip: 'Change Language / Sinthani Chilankulo',
-                onSelected: (Locale locale) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        locale.languageCode == 'en'
-                            ? 'Language change to English'
-                            : 'Chilankhulo chasintha ku Chichewa',
+              // Language Switcher
+              Consumer<LocaleProvider>(
+                builder: (context, localeProvider, child) {
+                  return PopupMenuButton<Locale>(
+                    icon: const Icon(Icons.language),
+                    tooltip: AppLocalizations.of(context)!.changeLanguage,
+                    onSelected: (Locale locale) async {
+                      await localeProvider.setLocale(locale);
+                      
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              AppLocalizations.of(context)!.languageChanged,
+                            ),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: const Locale('en', ''),
+                        child: Row(
+                          children: [
+                            const Text('🇺🇸', style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            const Text('English'),
+                            if (localeProvider.locale.languageCode == 'en')
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: Icon(Icons.check, size: 16, color: Colors.green),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
+                      PopupMenuItem(
+                        value: const Locale('ny', ''),
+                        child: Row(
+                          children: [
+                            const Text('🇲🇼', style: TextStyle(fontSize: 20)),
+                            const SizedBox(width: 8),
+                            const Text('Chichewa'),
+                            if (localeProvider.locale.languageCode == 'ny')
+                              const Padding(
+                                padding: EdgeInsets.only(left: 8),
+                                child: Icon(Icons.check, size: 16, color: Colors.green),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: Locale('en', ''),
-                    child: Row(
-                      children: [
-                        Text('🇺🇸', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 8),
-                        Text('English'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: Locale('ny', ''),
-                    child: Row(
-                      children: [
-                        Text('🇲🇼', style: TextStyle(fontSize: 20)),
-                        SizedBox(width: 8),
-                        Text('Chichewa'),
-                      ],
-                    ),
-                  ),
-                ],
               ),
 
               IconButton(
                   icon: const Icon(Icons.download),
                   onPressed: _showLogDownloadDialog),
-              // Theme Toggle Button
+              
               IconButton(
                 icon: Icon(
                   themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  color:
-                      themeProvider.isDarkMode ? Colors.yellow : Colors.white,
+                  color: themeProvider.isDarkMode ? Colors.yellow : Colors.white,
                 ),
                 onPressed: () => themeProvider.toggleTheme(),
                 tooltip: themeProvider.isDarkMode
                     ? 'Switch to Light Mode'
                     : 'Switch to Dark Mode',
               ),
-              Switch(
-                  value: advancedMode,
-                  // ignore: deprecated_member_use
-                  activeColor: const Color(0xFF4CAF50),
-                  onChanged: (value) => setState(() => advancedMode = value)),
+              
+            //   Switch(
+            //       value: advancedMode,
+            //       activeColor: const Color(0xFF4CAF50),
+            //       onChanged: (value) => setState(() => advancedMode = value)),
             ],
           ),
           body: AnimatedSwitcher(
@@ -513,6 +531,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                 FadeTransition(opacity: animation, child: child),
             child: getCurrentPage(),
           ),
+          
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
@@ -552,9 +571,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     switch (_currentIndex) {
       case 0:
         // Use local state (currentWatts & history) instead of Riverpod if the package isn't available
-        final greeting = DateTime.now().hour < 12
-            ? "Good Morning"
-            : (DateTime.now().hour < 17 ? "Good Afternoon" : "Good Evening");
+        final l10n = AppLocalizations.of(context)!; 
+          final greeting = DateTime.now().hour < 12
+              ? l10n.goodMorning
+              : DateTime.now().hour < 17
+                  ? l10n.goodAfternoon
+                  : l10n.goodEvening;
         return _buildHomePage(greeting);
       case 1:
         return _buildHistoryPage();
@@ -567,6 +589,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
 
   Widget _buildHomePage(String greeting) {
     final selectedApplianceId = ref.watch(selectedApplianceProvider);
+    final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return LayoutBuilder(
@@ -772,7 +795,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
                                   children: [
-                                    const Text("Average Usage",
+                                    Text(AppLocalizations.of(context)!.averageUsage,
                                         style: TextStyle(color: Colors.white)),
                                     Text(
                                         "${_calculateAverageUsage().toStringAsFixed(1)} W",
@@ -792,7 +815,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
                                   children: [
-                                    const Text("Peak Usage",
+                                    Text(AppLocalizations.of(context)!.peakUsage,
                                         style: TextStyle(color: Colors.white)),
                                     Text(
                                         "${_calculatePeakUsage().toStringAsFixed(1)} W",
@@ -812,7 +835,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
                                   children: [
-                                    const Text("Total Readings",
+                                    Text(AppLocalizations.of(context)!.totalReadings,
                                         style: TextStyle(color: Colors.white)),
                                     Text("${_getTotalReadings()}",
                                         style: const TextStyle(
@@ -831,7 +854,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                 ),
                 const SizedBox(height: 30),
                 ExpansionTile(
-                  title: Text("AI Energy Insights",
+                  title: Text(AppLocalizations.of(context)!.aiEnergyInsights,
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall!
@@ -853,7 +876,9 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                             historicalData.isNotEmpty
                                 ? historicalData
                                 : history,
-                            double.tryParse(currentWatts) ?? 0.0),
+                            double.tryParse(currentWatts) ?? 0.0,
+                            apiKey 
+                            ),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -871,6 +896,10 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                             );
                           }
 
+                          if (snapshot.hasError) {
+                            return Text("Insights temporarily unavailable.");
+                          }
+
                           return Text(
                             snapshot.data ??
                                 "Unable to generate insights at this time.",
@@ -882,16 +911,16 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                if (advancedMode)
-                  ElevatedButton.icon(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("AR Mode Coming Soon!"))),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("Launch AR View"),
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                  ),
+                // const SizedBox(height: 20),
+                // if (advancedMode)
+                //   ElevatedButton.icon(
+                //     onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                //         const SnackBar(content: Text("AR Mode Coming Soon!"))),
+                //     icon: const Icon(Icons.camera_alt),
+                //     label: const Text("Launch AR View"),
+                //     style:
+                //         ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                //   ),
               ],
             ),
           ),
@@ -972,7 +1001,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Energy Timeline",
+                  Text(AppLocalizations.of(context)!.energyTimeline,
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall!
@@ -989,8 +1018,8 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                 strokeWidth: 2, color: Colors.white))
                         : const Icon(Icons.history),
                     label: _isLoadingHistorical
-                        ? const Text("Loading...")
-                        : const Text("Load Data"),
+                        ? Text(AppLocalizations.of(context)!.loading)
+                        : Text(AppLocalizations.of(context)!.loadData),
                     style:
                         ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                   ),
@@ -1147,13 +1176,13 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                 width: double.infinity,
                 height: chartHeight,
                 child: _isLoadingHistorical
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircularProgressIndicator(color: Color(0xFF4CAF50)),
                             SizedBox(height: 16),
-                            Text("Loading historical data from logs...",
+                            Text(AppLocalizations.of(context)!.loadingHistoricalData,
                                 style: TextStyle(
                                     color: Colors.grey, fontSize: 16)),
                           ],
@@ -1237,26 +1266,24 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                               position: LegendPosition.bottom,
                             ),
                           )
-                        : const Center(
+                        : Center(
                             child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.timeline,
                                   size: 64, color: Colors.grey),
                               SizedBox(height: 16),
-                              Text("No history data available.",
+                              Text(AppLocalizations.of(context)!.noHistoryDataAvailable,
                                   style: TextStyle(
                                       color: Colors.grey, fontSize: 18)),
                               SizedBox(height: 8),
-                              Text(
-                                  "Click 'Load Historical Data' to fetch from logs",
+                              Text(AppLocalizations.of(context)!.clickLoadHistoricalData,
                                   style: TextStyle(
                                       color: Colors.grey, fontSize: 14)),
                             ],
                           )),
               ),
               const SizedBox(height: 20),
-              // Responsive button layout - wrap on small screens, row on larger screens
               LayoutBuilder(
                 builder: (context, constraints) {
                   if (constraints.maxWidth < 400) {
@@ -1275,7 +1302,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                     height: 16,
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2))
-                                : const Text("Day View"),
+                                : Text(AppLocalizations.of(context)!.dayView),
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue),
                           ),
@@ -1293,7 +1320,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                     height: 16,
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2))
-                                : const Text("Week View"),
+                                : Text(AppLocalizations.of(context)!.weekView),
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue),
                           ),
@@ -1311,7 +1338,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                     height: 16,
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2))
-                                : const Text("Month View"),
+                                : Text(AppLocalizations.of(context)!.monthView),
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue),
                           ),
@@ -1331,12 +1358,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                   ? null
                                   : () => _fetchHistoricalData(days: 1),
                               child: _isLoadingHistorical
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 16,
                                       height: 16,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2))
-                                  : const Text("Day View"),
+                                  : Text(AppLocalizations.of(context)!.dayView),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue),
                             ),
@@ -1350,12 +1377,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                   ? null
                                   : () => _fetchHistoricalData(days: 7),
                               child: _isLoadingHistorical
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 16,
                                       height: 16,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2))
-                                  : const Text("Week View"),
+                                  : Text(AppLocalizations.of(context)!.weekView),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue),
                             ),
@@ -1369,12 +1396,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                                   ? null
                                   : () => _fetchHistoricalData(days: 30),
                               child: _isLoadingHistorical
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 16,
                                       height: 16,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2))
-                                  : const Text("Month View"),
+                                  : Text(AppLocalizations.of(context)!.monthView),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue),
                             ),
@@ -1400,7 +1427,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Energy Profile",
+              Text(AppLocalizations.of(context)!.energyProfile,
                   style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                       fontSize: constraints.maxWidth < 400 ? 16 : 24)),
               const SizedBox(height: 20),
@@ -1480,6 +1507,9 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
               const SizedBox(height: 20),
               Card(
                 elevation: 10,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E2A44)
+                    : Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 child: Padding(
@@ -1487,15 +1517,19 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Name: $ownerName",
+                      Text("${AppLocalizations.of(context)!.name}: $ownerName",
                           style: TextStyle(
                               fontSize: constraints.maxWidth < 400 ? 16 : 22,
-                              color: const Color.fromARGB(255, 6, 6, 6))),
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF4CAF50)
+                                  : Colors.black,
+                              fontWeight: FontWeight.bold
+                              )),
                       const SizedBox(height: 15),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text("Energy Score",
+                          Text(AppLocalizations.of(context)!.energyScore,
                               style: TextStyle(
                                   fontSize: 18, color: Color(0xFF4CAF50))),
                           Text("${(_energyScore * 100).toStringAsFixed(0)}%",
@@ -1514,7 +1548,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                         minHeight: 10,
                       ),
                       const SizedBox(height: 20),
-                      Text("Achievements",
+                      Text(AppLocalizations.of(context)!.achievements,
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall!
@@ -1562,7 +1596,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
                     ),
                   );
                 },
-                child: const Text("Take Energy Challenge"),
+                child: Text(AppLocalizations.of(context)!.energyChallenge),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
               ),
             ],

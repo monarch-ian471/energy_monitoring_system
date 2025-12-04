@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
   /// No description provided for @history.
   ///
   /// In en, this message translates to:
@@ -277,6 +283,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Energy Score'**
   String get energyScore;
+
+  /// No description provided for @dayView.
+  ///
+  /// In en, this message translates to:
+  /// **'Day View'**
+  String get dayView;
+
+  /// No description provided for @weekView.
+  ///
+  /// In en, this message translates to:
+  /// **'Week View'**
+  String get weekView;
+
+  /// No description provided for @monthView.
+  ///
+  /// In en, this message translates to:
+  /// **'Month View'**
+  String get monthView;
+
+  /// No description provided for @yearView.
+  ///
+  /// In en, this message translates to:
+  /// **'Year View'**
+  String get yearView;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Energy Monitor'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your gateway to smart energy.'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingMasterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Master Your Power'**
+  String get onboardingMasterTitle;
+
+  /// No description provided for @onboardingMasterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control every watt with ease.'**
+  String get onboardingMasterSubtitle;
+
+  /// No description provided for @onboardingTrackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track & Thrive'**
+  String get onboardingTrackTitle;
+
+  /// No description provided for @onboardingTrackSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See your energy story unfold.'**
+  String get onboardingTrackSubtitle;
+
+  /// No description provided for @onboardingFutureTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Energy, Reimagined'**
+  String get onboardingFutureTitle;
+
+  /// No description provided for @onboardingFutureSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline-ready, future-proof.'**
+  String get onboardingFutureSubtitle;
+
+  /// No description provided for @enterYourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your name'**
+  String get enterYourName;
+
+  /// No description provided for @enterEnergyMonitor.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the Energy Monitor'**
+  String get enterEnergyMonitor;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @switchToChichewa.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Chichewa'**
+  String get switchToChichewa;
+
+  /// No description provided for @languageChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Language changed to English'**
+  String get languageChanged;
+
+  /// No description provided for @changeLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Language'**
+  String get changeLanguage;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @loadData.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Data'**
+  String get loadData;
+
+  /// No description provided for @loadingHistoricalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading historical data from logs...'**
+  String get loadingHistoricalData;
+
+  /// No description provided for @noHistoryDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No history data available.'**
+  String get noHistoryDataAvailable;
+
+  /// No description provided for @clickLoadHistoricalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Click \'Load Historical Data\' to fetch from logs'**
+  String get clickLoadHistoricalData;
 }
 
 class _AppLocalizationsDelegate

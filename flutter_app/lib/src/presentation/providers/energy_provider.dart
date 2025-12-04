@@ -1,6 +1,5 @@
 import 'package:energy_monitor_app/src/data/datatsources/local/sqlite_datasource.dart';
 import 'package:energy_monitor_app/src/data/datatsources/remote/api_datasource.dart';
-// import 'package:flutter_riverpod/legacy.dart' show StateProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/energy_repository_impl.dart';
 import '../../domain/use_cases/get_current_energy.dart';

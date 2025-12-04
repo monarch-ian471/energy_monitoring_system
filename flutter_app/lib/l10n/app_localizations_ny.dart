@@ -36,6 +36,9 @@ class AppLocalizationsNy extends AppLocalizations {
   String get dashboard => 'Tsamba Loyamba';
 
   @override
+  String get name => 'Dzina';
+
+  @override
   String get history => 'Mbiri';
 
   @override
@@ -97,4 +100,78 @@ class AppLocalizationsNy extends AppLocalizations {
 
   @override
   String get energyScore => 'Mphoto ya Magetsi';
+
+  @override
+  String get dayView => 'Onani Tsiku';
+
+  @override
+  String get weekView => 'Onani Sabata';
+
+  @override
+  String get monthView => 'Onani Mwezi';
+
+  @override
+  String get yearView => 'Onani Chaka';
+
+  @override
+  String get onboardingWelcomeTitle => 'Takulandirani ku Choyezera Magetsi';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Njira yanu yopita ku magetsi anzeru.';
+
+  @override
+  String get onboardingMasterTitle => 'Gwiritsani Ntchito Magetsi Anu Bwino';
+
+  @override
+  String get onboardingMasterSubtitle => 'Yendetsani watt iliyonse mosavuta.';
+
+  @override
+  String get onboardingTrackTitle => 'Onani ndi Kupambana';
+
+  @override
+  String get onboardingTrackSubtitle =>
+      'Onani nkhani yanu ya magetsi ikuwonekera.';
+
+  @override
+  String get onboardingFutureTitle => 'Magetsi Anu, Opangidwa Mwatsopano';
+
+  @override
+  String get onboardingFutureSubtitle =>
+      'Okonzeka pa intaneti, otetezedwa tsogolo.';
+
+  @override
+  String get enterYourName => 'Lembani dzina lanu';
+
+  @override
+  String get enterEnergyMonitor => 'Lowani mu Choyezera Magetsi';
+
+  @override
+  String get next => 'Pita Patsogolo';
+
+  @override
+  String get switchToChichewa => 'Sinthani ku English';
+
+  @override
+  String get languageChanged => 'Chilankhulo chasintha ku Chichewa';
+
+  @override
+  String get changeLanguage => 'Sinthani Chilankhulo';
+
+  @override
+  String get loading => 'Onkhetsela...';
+
+  @override
+  String get loadData => 'Onkhetsela Deta';
+
+  @override
+  String get loadingHistoricalData =>
+      'Onkhetsela deta yakale kuchokera ku ma log...';
+
+  @override
+  String get noHistoryDataAvailable => 'Palibe deta yakale yomwe ilipo.';
+
+  @override
+  String get clickLoadHistoricalData =>
+      'Dinani \'Onkhetsela Deta Yakale\' kuti mupeze kuchokera ku ma log';
 }

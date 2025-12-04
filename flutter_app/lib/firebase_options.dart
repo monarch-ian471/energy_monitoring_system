@@ -1,7 +1,8 @@
-// lib/firebase_options.dart
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
 
 /// Firebase configuration for all platforms
 class DefaultFirebaseOptions {
@@ -21,32 +22,33 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // WEB CONFIGURATION (paste your firebaseConfig here)
-  static const FirebaseOptions web = FirebaseOptions(
-      apiKey: "AIzaSyBZB31ssPafqxSPPGIbT3knIP_xPa0aDM8",
-      authDomain: "energymonitor-3cd28.firebaseapp.com",
-      projectId: "energymonitor-3cd28",
-      storageBucket: "energymonitor-3cd28.firebasestorage.app",
-      messagingSenderId: "1043917657336",
-      appId: "1:1043917657336:web:ce9389b2863e3cdc67170d",
-      measurementId: "G-92B8S492KD");
+  // WEB CONFIGURATION 
+  static FirebaseOptions web = FirebaseOptions(
+      apiKey: dotenv.env['FIREBASE_API_KEY']!,
+      authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN']!,
+      projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
+      storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
+      messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
+      appId: dotenv.env['FIREBASE_APP_ID']!,
+      measurementId: dotenv.env['FIREBASE_MEASUREMENT_ID']!
+  );
 
-  // ANDROID CONFIGURATION (from google-services.json)
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA85G4fc_Zq4zMYDTGxYRkpGi6j6QraWzQ',
-    appId: '1:1043917657336:android:d7028e562069cd3767170d',
-    messagingSenderId: '1043917657336',
-    projectId: 'energymonitor-3cd28',
-    storageBucket: 'energymonitor-3cd28.firebasestorage.app',
+  // ANDROID CONFIGURATION
+  static FirebaseOptions android = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY']!,
+    appId: dotenv.env['FIREBASE_APP_ID']!,
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
+    projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
   );
 
   // iOS CONFIGURATION (from GoogleService-Info.plist)
   // static const FirebaseOptions ios = FirebaseOptions(
-  //   apiKey: 'AIza...YOUR_IOS_API_KEY',
-  //   appId: '1:123456789:ios:ghi789',
-  //   messagingSenderId: '123456789',
-  //   projectId: 'your-project-id',
-  //   storageBucket: 'your-app.appspot.com',
+  //   apiKey: dotenv.env['FIREBASE_API_KEY']!,
+  //   appId: dotenv.env['FIREBASE_APP_ID']!,
+  //   messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID']!,
+  //   projectId: dotenv.env['FIREBASE_PROJECT_ID']!,
+  //   storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
   //   iosBundleId: 'com.iankatengeza.energy_monitor_app',
   // );
 }
