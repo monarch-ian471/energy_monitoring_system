@@ -1,0 +1,518 @@
+{
+	"info": {
+		"_postman_id": "39755523-0bd763a0-4590-4d81-9227-5e8308d57af0",
+		"name": "Energy Monitor API",
+		"description": "Complete API collection for Raspberry Pi Energy Monitoring System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. System Health",
+			"item": [
+				{
+					"name": "Root - API Info",
+					"id": "39755523-0b0f92c9-408c-41bc-9923-44cc27925150",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						},
+						"description": "Get API information and available endpoints"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"id": "39755523-ad91e1db-d1ca-4d72-96fa-ee343633adb7",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check system health, database, and log file status"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-0db2bb26-9df5-49c1-8b8d-5841abb154b4"
+		},
+		{
+			"name": "2. Current Energy Data",
+			"item": [
+				{
+					"name": "Get Current Energy (Default Appliance)",
+					"id": "39755523-9591c981-e5ee-45b9-9d4b-fad8bc858f78",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy"
+							]
+						},
+						"description": "Get latest energy reading for appliance 1 (default)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Energy (Query Parameter)",
+					"id": "39755523-41a578c0-0a96-4787-908a-bf30813cde82",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy?appliance_id={{appliance_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy"
+							],
+							"query": [
+								{
+									"key": "appliance_id",
+									"value": "{{appliance_id}}",
+									"description": "Appliance ID (1, 2, or 3)"
+								}
+							]
+						},
+						"description": "Get latest energy reading for specific appliance using query parameter"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Energy (Path Parameter)",
+					"id": "39755523-9a2a764c-d05c-4a65-903f-ed8cd86e59fb",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy/{{appliance_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy",
+								"{{appliance_id}}"
+							]
+						},
+						"description": "Get latest energy reading for specific appliance using path parameter"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-28593e50-7f22-49e8-852e-4d20852911d0"
+		},
+		{
+			"name": "3. Historical Energy Data",
+			"item": [
+				{
+					"name": "Get Energy History (Default Appliance)",
+					"id": "39755523-f06e80ec-7424-42d4-a0ba-7cd127507677",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy",
+								"history"
+							]
+						},
+						"description": "Get last 24 readings for appliance 1 (default)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Energy History (Query Parameter)",
+					"id": "39755523-e4c4222b-ecbf-46f1-8d46-c96f7fa2ddf8",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy/history?appliance_id={{appliance_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy",
+								"history"
+							],
+							"query": [
+								{
+									"key": "appliance_id",
+									"value": "{{appliance_id}}",
+									"description": "Appliance ID"
+								}
+							]
+						},
+						"description": "Get last 24 readings for specific appliance"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Energy History (Path Parameter)",
+					"id": "39755523-e7b9aee6-2122-4f6d-98fd-32cc4608580d",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/energy/history/{{appliance_id}}?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"energy",
+								"history",
+								"{{appliance_id}}"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of records (default: 24)"
+								}
+							]
+						},
+						"description": "Get historical readings with custom limit"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-dcf6b971-0dc1-425b-92aa-dce773d7a04c"
+		},
+		{
+			"name": "4. Appliance Management",
+			"item": [
+				{
+					"name": "List All Appliances",
+					"id": "39755523-ab66b731-1c01-4ceb-b1e6-c5500d1fc69f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/appliances",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"appliances"
+							]
+						},
+						"description": "Get list of all configured appliances being monitored"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-8e8a373b-0daa-4d17-9bc0-d21265e62e0d"
+		},
+		{
+			"name": "5. Logs - Summary & Monitoring",
+			"item": [
+				{
+					"name": "Get Logs Summary",
+					"id": "39755523-8bdf8454-dc58-41b6-9e13-45f9dd6545ec",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/summary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"summary"
+							]
+						},
+						"description": "Get summary statistics from both energy monitor and API logs"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Energy Monitor Logs",
+					"id": "39755523-60b49ce8-6d99-489c-9ac3-302b26cc5657",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/energy-monitor",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"energy-monitor"
+							]
+						},
+						"description": "Get parsed energy monitor log data for analysis"
+					},
+					"response": []
+				},
+				{
+					"name": "Get API Access Logs",
+					"id": "39755523-300c118c-ed1e-4bd5-86fa-0693512bf08d",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/api",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"api"
+							]
+						},
+						"description": "Get API access logs for system monitoring"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-ae2eea9b-03ba-4b21-948f-d477824c754f"
+		},
+		{
+			"name": "6. Historical Data with Statistics",
+			"item": [
+				{
+					"name": "Get Historical Data (7 Days Default)",
+					"id": "39755523-b6cf6df7-7c60-429e-8de9-f1c9b40bb931",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/historical-data",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"historical-data"
+							]
+						},
+						"description": "Get historical energy data from logs with daily statistics (last 7 days)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Historical Data (Custom Days)",
+					"id": "39755523-3bb6901d-8fbc-4f22-88dc-223049f5d06a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/historical-data?days=3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"historical-data"
+							],
+							"query": [
+								{
+									"key": "days",
+									"value": "3",
+									"description": "Number of days to retrieve (e.g., 3, 7, 14, 30)"
+								}
+							]
+						},
+						"description": "Get historical data for custom number of days"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Historical Data (30 Days)",
+					"id": "39755523-63cfbf92-882a-4d92-8a8b-35f8ac1a58c6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/historical-data?days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"historical-data"
+							],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						},
+						"description": "Get historical data for the last 30 days"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-fca35e58-02ca-41e0-b931-94022eeb0e41"
+		},
+		{
+			"name": "7. Download Log Files",
+			"item": [
+				{
+					"name": "Download Energy Monitor Log",
+					"id": "39755523-fb584017-e802-4222-aafc-6ad18270ce28",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/download/energy-monitor",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"download",
+								"energy-monitor"
+							]
+						},
+						"description": "Download complete energy_monitor.log file"
+					},
+					"response": []
+				},
+				{
+					"name": "Download API Access Log",
+					"id": "39755523-cd0499b8-1b86-4cda-88cc-6bdeada7c536",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/logs/download/api",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logs",
+								"download",
+								"api"
+							]
+						},
+						"description": "Download complete api.log file"
+					},
+					"response": []
+				}
+			],
+			"id": "39755523-a95df89d-1dfd-4f7f-b542-2bcc1ce9ce15"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "1c07d73a-893b-4c38-9016-66d03f946aa9",
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Testing endpoint: ' + pm.request.url);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "96d9fb0a-281c-4f18-88b4-cf5464f0f836",
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					"// Global test script",
+					"pm.test('Status code is 200', function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"pm.test('Response time is less than 2000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+					"});",
+					"",
+					"pm.test('Response has valid JSON', function () {",
+					"    pm.response.to.be.json;",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://YOUR_PI_IP:8000"
+		},
+		{
+			"key": "appliance_id",
+			"value": "1"
+		}
+	]
+}

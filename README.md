@@ -53,7 +53,7 @@ Raspberry Pi Scripts (Check the README.md for pi_scripts)
 	uvicorn pi_scripts.api:app --host 0.0.0.0 --port 8000
 
 Usage
-- Launch the Fluuter app to view real-time energy data from the Pi.
+- Launch the Flutter app to view real-time energy data from the Pi.
 - Use the "Refresh" button to update data manually.
 - Generate PDF reports via the PDF icon.
 - Toggle "Advanced Mode" for future features.
