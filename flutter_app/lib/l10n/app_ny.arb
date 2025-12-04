@@ -12,6 +12,7 @@
   "energyTimeline": "Mbiri ya Magetsi",
   "energyProfile": "Tsamba Lanu la Magetsi",
   "dashboard": "Tsamba Loyamba",
+  "name": "Dzina",
   "history": "Mbiri",
   "profile": "Tsamba Lanu",
   "refresh": "Yambaninso",
@@ -33,6 +34,10 @@
   "selectLanguage": "Sankhani Chilankhulo",
   "achievements": "Zopambana",
   "energyScore": "Mphoto ya Magetsi",
+  "dayView": "Onani Tsiku",
+  "weekView": "Onani Sabata",
+  "monthView": "Onani Mwezi",
+  "yearView": "Onani Chaka",
   
   "onboardingWelcomeTitle": "Takulandirani ku Choyezera Magetsi",
   "onboardingWelcomeSubtitle": "Njira yanu yopita ku magetsi anzeru.",
@@ -51,5 +56,6 @@
   "loading": "Onkhetsela...",
   "loadData": "Onkhetsela Deta",
   "loadingHistoricalData": "Onkhetsela deta yakale kuchokera ku ma log...",
-  "noHistoryDataAvailable": "Palibe deta yakale yomwe ilipo."
+  "noHistoryDataAvailable": "Palibe deta yakale yomwe ilipo.",
+  "clickLoadHistoricalData": "Dinani 'Onkhetsela Deta Yakale' kuti mupeze kuchokera ku ma log"
 }

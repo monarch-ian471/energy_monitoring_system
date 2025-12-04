@@ -152,6 +152,12 @@ abstract class AppLocalizations {
   /// **'Dashboard'**
   String get dashboard;
 
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
   /// No description provided for @history.
   ///
   /// In en, this message translates to:
@@ -278,6 +284,30 @@ abstract class AppLocalizations {
   /// **'Energy Score'**
   String get energyScore;
 
+  /// No description provided for @dayView.
+  ///
+  /// In en, this message translates to:
+  /// **'Day View'**
+  String get dayView;
+
+  /// No description provided for @weekView.
+  ///
+  /// In en, this message translates to:
+  /// **'Week View'**
+  String get weekView;
+
+  /// No description provided for @monthView.
+  ///
+  /// In en, this message translates to:
+  /// **'Month View'**
+  String get monthView;
+
+  /// No description provided for @yearView.
+  ///
+  /// In en, this message translates to:
+  /// **'Year View'**
+  String get yearView;
+
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
@@ -385,6 +415,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No history data available.'**
   String get noHistoryDataAvailable;
+
+  /// No description provided for @clickLoadHistoricalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Click \'Load Historical Data\' to fetch from logs'**
+  String get clickLoadHistoricalData;
 }
 
 class _AppLocalizationsDelegate

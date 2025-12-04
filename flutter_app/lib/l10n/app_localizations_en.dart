@@ -36,6 +36,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard => 'Dashboard';
 
   @override
+  String get name => 'Name';
+
+  @override
   String get history => 'History';
 
   @override
@@ -99,6 +102,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get energyScore => 'Energy Score';
 
   @override
+  String get dayView => 'Day View';
+
+  @override
+  String get weekView => 'Week View';
+
+  @override
+  String get monthView => 'Month View';
+
+  @override
+  String get yearView => 'Year View';
+
+  @override
   String get onboardingWelcomeTitle => 'Welcome to Energy Monitor';
 
   @override
@@ -151,4 +166,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noHistoryDataAvailable => 'No history data available.';
+
+  @override
+  String get clickLoadHistoricalData =>
+      'Click \'Load Historical Data\' to fetch from logs';
 }

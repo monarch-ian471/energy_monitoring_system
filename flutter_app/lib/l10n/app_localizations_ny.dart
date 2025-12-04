@@ -36,6 +36,9 @@ class AppLocalizationsNy extends AppLocalizations {
   String get dashboard => 'Tsamba Loyamba';
 
   @override
+  String get name => 'Dzina';
+
+  @override
   String get history => 'Mbiri';
 
   @override
@@ -99,6 +102,18 @@ class AppLocalizationsNy extends AppLocalizations {
   String get energyScore => 'Mphoto ya Magetsi';
 
   @override
+  String get dayView => 'Onani Tsiku';
+
+  @override
+  String get weekView => 'Onani Sabata';
+
+  @override
+  String get monthView => 'Onani Mwezi';
+
+  @override
+  String get yearView => 'Onani Chaka';
+
+  @override
   String get onboardingWelcomeTitle => 'Takulandirani ku Choyezera Magetsi';
 
   @override
@@ -155,4 +170,8 @@ class AppLocalizationsNy extends AppLocalizations {
 
   @override
   String get noHistoryDataAvailable => 'Palibe deta yakale yomwe ilipo.';
+
+  @override
+  String get clickLoadHistoricalData =>
+      'Dinani \'Onkhetsela Deta Yakale\' kuti mupeze kuchokera ku ma log';
 }

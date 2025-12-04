@@ -12,6 +12,7 @@
   "energyTimeline": "Energy Timeline",
   "energyProfile": "Energy Profile",
   "dashboard": "Dashboard",
+  "name": "Name",
   "history": "History",
   "profile": "Profile",
   "refresh": "Refresh",
@@ -33,6 +34,10 @@
   "selectLanguage": "Select Language",
   "achievements": "Achievements",
   "energyScore": "Energy Score",
+  "dayView": "Day View",
+  "weekView": "Week View",
+  "monthView": "Month View",
+  "yearView": "Year View",
   
   "onboardingWelcomeTitle": "Welcome to Energy Monitor",
   "onboardingWelcomeSubtitle": "Your gateway to smart energy.",
@@ -51,5 +56,6 @@
   "loading": "Loading...",
   "loadData": "Load Data",
   "loadingHistoricalData": "Loading historical data from logs...",
-  "noHistoryDataAvailable": "No history data available."
+  "noHistoryDataAvailable": "No history data available.",
+  "clickLoadHistoricalData": "Click 'Load Historical Data' to fetch from logs"
 }
