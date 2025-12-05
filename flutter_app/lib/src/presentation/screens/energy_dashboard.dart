@@ -69,7 +69,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
         if (mounted) setState(() => _isFetching = false);
       });
     });
-
+    
     _initSpeech();
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1000))
@@ -117,96 +117,79 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     }
   }
 
-  Future<void> _fetchHistoricalData({int days = 7}) async {
-    if (mounted) setState(() => _isLoadingHistorical = true);
+  Future<void> _downloadLogFile(String logType) async {
     try {
-      final response = await http
-          .get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'))
-          .timeout(const Duration(seconds: 10), onTimeout: () {
-        // Added: 10s timeout
-        throw Exception('API timeout - Check if server is running');
-      });
-      print('API Response /history: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        // Handle different response formats
-        if (data.containsKey('data') && data.containsKey('daily_stats')) {
-          setState(() {
-            // Update both historical data and daily stats
-            historicalData = List<Map<String, dynamic>>.from(data['data']);
-            dailyStats = List<Map<String, dynamic>>.from(data['daily_stats']);
-
-            // Convert log data format to match the expected chart format
-            history = historicalData.map<Map<String, dynamic>>((item) {
-              return {
-                'timestamp': item['timestamp'],
-                'watts': item['watts'] is int
-                    ? (item['watts'] as int).toDouble()
-                    : item['watts'] as double,
-              };
-            }).toList();
-
-            // Update current watts to the latest reading if available
-            if (history.isNotEmpty) {
-              currentWatts = history.first['watts'].toStringAsFixed(2);
-            }
-          });
-
-          // Cache the new data
-          await database?.delete('cache');
-          for (var item in history) {
-            await database?.insert('cache',
-                {'timestamp': item['timestamp'], 'watts': item['watts']});
-          }
-
+      // For web platform, create a download link
+      if (kIsWeb) {
+        final response =
+            await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+        if (response.statusCode == 200) {
+          // For web, we'll use a simple approach - show a message with the data
+          // In a real implementation, you'd use dart:html for proper file download
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                  "Loaded ${history.length} historical readings from logs")));
-        } else if (data.containsKey('error')) {
-          // Handle error response from mock server
-          print('API Error: ${data['error']}');
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("API Error: ${data['error']}")));
+            content: Text(
+                "Log data received (${response.bodyBytes.length} bytes). Web download feature coming soon!"),
+            duration: const Duration(seconds: 3),
+          ));
         } else {
-          // Handle unexpected response format
-          print('API Error: Invalid response format');
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Invalid response format from server")));
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Failed to download log file")));
         }
+        return;
+      }
+
+      // For mobile platforms, use storage permission
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+        if (!status.isGranted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Storage permission required to download logs")));
+          return;
+        }
+      }
+
+      final response =
+          await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+      if (response.statusCode == 200) {
+        final directory = await getExternalStorageDirectory();
+        if (directory == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Could not access storage directory")));
+          return;
+        }
+
+        final file = File('${directory.path}/$logType.log');
+        await file.writeAsBytes(response.bodyBytes);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Log file downloaded to: ${file.path}")));
       } else {
-        throw Exception('Failed to fetch: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Failed to download log file")));
       }
     } catch (e) {
-      print('Historical data fetch error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              "Error: $e - Using offline data"))); // Added: User notification
-      // Fallback: Load from local DB (outside box - resilient for Malawi's networks)
-      final cached = await database?.query('cache');
-      if (cached != null)
-        history = cached
-            .map(
-                (row) => {'timestamp': row['timestamp'], 'watts': row['watts']})
-            .toList();
-    } finally {
-      if (mounted) setState(() => _isLoadingHistorical = false);
+      print('Download error: $e');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Download error: $e")));
     }
   }
 
   Future<void> _fetchData() async {
     if (mounted) setState(() => _isFetching = true);
     final selectedApplianceId = ref.read(selectedApplianceProvider);
+
+    // Debug output to ensure apiBaseUrl is visible at runtime
+    debugPrint('Using apiBaseUrl: $apiBaseUrl (fetchData) - appliance: $selectedApplianceId');
+
     try {
-      // UPDATE THESE URLS TO INCLUDE APPLIANCE ID:
+      // NOTE: server expects `appliance_id` (snake_case)
       final currentResponse = await http
-          .get(Uri.parse('$apiBaseUrl/energy?applianceId=$selectedApplianceId'))
+          .get(Uri.parse('$apiBaseUrl/energy?appliance_id=$selectedApplianceId'))
           .timeout(const Duration(seconds: 10));
 
       final historyResponse = await http
-          .get(Uri.parse(
-              '$apiBaseUrl/energy/history?applianceId=$selectedApplianceId'))
+          .get(Uri.parse('$apiBaseUrl/energy/history?appliance_id=$selectedApplianceId'))
           .timeout(const Duration(seconds: 10));
 
       print('API Response /energy: ${currentResponse.body}');
@@ -292,61 +275,83 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     }
   }
 
-  Future<void> _downloadLogFile(String logType) async {
+  Future<void> _fetchHistoricalData({int days = 7}) async {
+    if (mounted) setState(() => _isLoadingHistorical = true);
+
+    debugPrint('Using apiBaseUrl: $apiBaseUrl (fetchHistoricalData) - days: $days');
+
     try {
-      // For web platform, create a download link
-      if (kIsWeb) {
-        final response =
-            await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
-        if (response.statusCode == 200) {
-          // For web, we'll use a simple approach - show a message with the data
-          // In a real implementation, you'd use dart:html for proper file download
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                "Log data received (${response.bodyBytes.length} bytes). Web download feature coming soon!"),
-            duration: const Duration(seconds: 3),
-          ));
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Failed to download log file")));
-        }
-        return;
-      }
+      final response = await http
+          .get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'))
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        throw Exception('API timeout - Check if server is running');
+      });
+      print('API Response /history: ${response.body}');
 
-      // For mobile platforms, use storage permission
-      var status = await Permission.storage.status;
-      if (!status.isGranted) {
-        status = await Permission.storage.request();
-        if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Storage permission required to download logs")));
-          return;
-        }
-      }
-
-      final response =
-          await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
       if (response.statusCode == 200) {
-        final directory = await getExternalStorageDirectory();
-        if (directory == null) {
+        final data = jsonDecode(response.body);
+
+        // Handle different response formats
+        if (data.containsKey('data') && data.containsKey('daily_stats')) {
+          setState(() {
+            // Update both historical data and daily stats
+            historicalData = List<Map<String, dynamic>>.from(data['data']);
+            dailyStats = List<Map<String, dynamic>>.from(data['daily_stats']);
+
+            // Convert log data format to match the expected chart format
+            history = historicalData.map<Map<String, dynamic>>((item) {
+              return {
+                'timestamp': item['timestamp'],
+                'watts': item['watts'] is int
+                    ? (item['watts'] as int).toDouble()
+                    : item['watts'] as double,
+              };
+            }).toList();
+
+            // Update current watts to the latest reading if available
+            if (history.isNotEmpty) {
+              currentWatts = history.first['watts'].toStringAsFixed(2);
+            }
+          });
+
+          // Cache the new data
+          await database?.delete('cache');
+          for (var item in history) {
+            await database?.insert('cache',
+                {'timestamp': item['timestamp'], 'watts': item['watts']});
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  "Loaded ${history.length} historical readings from logs")));
+        } else if (data.containsKey('error')) {
+          // Handle error response from mock server
+          print('API Error: ${data['error']}');
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("API Error: ${data['error']}")));
+        } else {
+          // Handle unexpected response format
+          print('API Error: Invalid response format');
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Could not access storage directory")));
-          return;
+              content: Text("Invalid response format from server")));
         }
-
-        final file = File('${directory.path}/$logType.log');
-        await file.writeAsBytes(response.bodyBytes);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Log file downloaded to: ${file.path}")));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to download log file")));
+        throw Exception('Failed to fetch: ${response.statusCode}');
       }
     } catch (e) {
-      print('Download error: $e');
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Download error: $e")));
+      print('Historical data fetch error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Error: $e - Using offline data"))); // Added: User notification
+      // Fallback: Load from local DB (outside box - resilient for Malawi's networks)
+      final cached = await database?.query('cache');
+      if (cached != null)
+        history = cached
+            .map(
+                (row) => {'timestamp': row['timestamp'], 'watts': row['watts']})
+            .toList();
+    } finally {
+      if (mounted) setState(() => _isLoadingHistorical = false);
     }
   }
 
