@@ -1,25 +1,45 @@
 #!/bin/bash
-set -e
+set -e  # Exit on any error for reliable builds
 
-echo "Installing Flutter SDK..."
+echo "=== Starting Flutter Web Build for Vercel ==="
 
-# Download and install Flutter (stable channel)
-git clone -b stable --depth 1 https://github.com/flutter/flutter.git /tmp/flutter
+# Step 1: Install Flutter SDK if not cached
+FLUTTER_DIR="/tmp/flutter"
+if [ ! -d "$FLUTTER_DIR" ]; then
+  echo "Downloading Flutter SDK (stable channel)..."
+  git clone -b stable --depth 1 https://github.com/flutter/flutter.git "$FLUTTER_DIR"
+else
+  echo "Flutter SDK found in cache."
+fi
 
-# Add Flutter to PATH (already done via vercel.json env)
-export PATH="$FLUTTER_ROOT/bin:$PATH"
+# Step 2: Dynamically update PATH (this is safe in Bash—no Vercel reservation conflict)
+export PATH="$FLUTTER_DIR/bin:$PATH"
+export FLUTTER_ROOT="$FLUTTER_DIR"
 
-# Verify installation
+# Step 3: Verify installation
+echo "Flutter version:"
 flutter --version
 
-# Enable web
+# Step 4: Enable web support (idempotent, safe to run multiple times)
 flutter config --enable-web
 
-# Get dependencies
+# Step 5: Get dependencies
+echo "Fetching Flutter dependencies..."
 flutter pub get
 
-# Build for web (release mode, base-href if needed)
-flutter build web --release --web-renderer canvaskit --csp
+# Step 6: Build for web (optimized for Vercel/static hosting)
+echo "Building Flutter web (release mode with CanvasKit renderer for better perf)..."
+flutter build web \
+  --release \
+  --web-renderer canvaskit \
+  --csp \
+  --base-href "/"  # Adjust if using subpaths
 
-# Vercel expects output in build/web by default when distDir is set
-echo "Build completed → build/web"
+# Step 7: Validate output
+if [ -d "build/web" ]; then
+  echo "=== Build successful! Output in build/web ==="
+  ls -la build/web | head -n 10  # Quick dir listing for logs
+else
+  echo "Build failed: No output in build/web"
+  exit 1
+fi

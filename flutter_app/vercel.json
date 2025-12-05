@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel/json",
   "builds": [
     {
       "src": "package.json",
@@ -7,11 +8,5 @@
         "distDir": "build/web"
       }
     }
-  ],
-  "build": {
-    "env": {
-      "FLUTTER_ROOT": "/tmp/flutter",
-      "PATH": "/tmp/flutter/bin:${env:PATH}"
-    }
-  }
+  ]
 }

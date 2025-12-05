@@ -1,6 +1,8 @@
 {
+  "name": "energy_monitoring_system",
+  "version": "1.0.0",
   "scripts": {
-  "build": "bash build.sh"
+    "build": "bash build.sh"
   },
   "dependencies": {
     "firebase": "^12.5.0"
