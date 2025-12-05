@@ -31,8 +31,7 @@ flutter pub get
 echo "Building Flutter web (release mode with CanvasKit renderer for better perf)..."
 flutter build web \
   --release \
-  --web-renderer canvaskit \
-  --csp \
+#   --csp \
   --base-href "/"  # Adjust if using subpaths
 
 # Step 7: Validate output
