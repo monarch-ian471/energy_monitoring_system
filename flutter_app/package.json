@@ -1,5 +1,9 @@
 {
+  "scripts": {
+  "build": "bash build.sh"
+  },
   "dependencies": {
     "firebase": "^12.5.0"
   }
+
 }

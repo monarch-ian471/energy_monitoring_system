@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build/web"
+      }
+    }
+  ],
+  "build": {
+    "env": {
+      "FLUTTER_ROOT": "/tmp/flutter",
+      "PATH": "/tmp/flutter/bin:${env:PATH}"
+    }
+  }
+}
