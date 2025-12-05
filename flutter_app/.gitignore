@@ -61,3 +61,4 @@ firebase_options_secret.dart
 
 # Node modules (if using)
 node_modules/
+.env*.local

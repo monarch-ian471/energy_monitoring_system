@@ -5,7 +5,6 @@
   "devCommand": "flutter run -d web-server --web-port 3000",
   "installCommand": "echo 'Dependencies installed via build.sh'",
   "framework": null,
-  "functions": {},
   "routes": [
     {
       "src": "/assets/(.*)",
