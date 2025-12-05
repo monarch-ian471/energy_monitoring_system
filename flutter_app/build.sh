@@ -1,44 +1,84 @@
 #!/bin/bash
-set -e  # Exit on any error for reliable builds
+set -e  # Exit on any error
 
-echo "=== Starting Flutter Web Build for Vercel ==="
+echo "=== Flutter Web Build for Vercel (Release Mode) ==="
 
 # Step 1: Install Flutter SDK if not cached
 FLUTTER_DIR="/tmp/flutter"
 if [ ! -d "$FLUTTER_DIR" ]; then
-  echo "Downloading Flutter SDK (stable channel)..."
+  echo "📥 Downloading Flutter SDK (stable channel)..."
   git clone -b stable --depth 1 https://github.com/flutter/flutter.git "$FLUTTER_DIR"
 else
-  echo "Flutter SDK found in cache."
+  echo "✅ Flutter SDK found in cache."
 fi
 
-# Step 2: Dynamically update PATH (this is safe in Bash—no Vercel reservation conflict)
+# Step 2: Update PATH
 export PATH="$FLUTTER_DIR/bin:$PATH"
 export FLUTTER_ROOT="$FLUTTER_DIR"
 
-# Step 3: Verify installation
-echo "Flutter version:"
+# Step 3: Verify Flutter installation
+echo "🔍 Flutter version:"
 flutter --version
 
-# Step 4: Enable web support (idempotent, safe to run multiple times)
+# Step 4: Enable web support
+echo "🌐 Enabling web support..."
 flutter config --enable-web
 
-# Step 5: Get dependencies
-echo "Fetching Flutter dependencies..."
+# Step 5: Clean previous builds (critical for web)
+echo "🧹 Cleaning previous builds..."
+flutter clean
+
+# Step 6: Get dependencies
+echo "📦 Fetching Flutter dependencies..."
 flutter pub get
 
-# Step 6: Build for web (optimized for Vercel/static hosting)
-echo "Building Flutter web (release mode with CanvasKit renderer for better perf)..."
+# Step 7: Generate localization files (CRITICAL - your app uses l10n)
+echo "🌍 Generating localization files..."
+flutter gen-l10n
+
+# Step 8: Run build_runner for Freezed/JSON serialization (CRITICAL)
+echo "🏗️ Running build_runner for code generation..."
+flutter pub run build_runner build --delete-conflicting-outputs
+
+# Step 9: Build for web (optimized for production)
+echo "🚀 Building Flutter web (release mode)..."
 flutter build web \
   --release \
-#   --csp \
-  --base-href "/"  # Adjust if using subpaths
+  --web-renderer canvaskit \
+  --base-href "/" \
+  --no-tree-shake-icons
 
-# Step 7: Validate output
-if [ -d "build/web" ]; then
-  echo "=== Build successful! Output in build/web ==="
-  ls -la build/web | head -n 10  # Quick dir listing for logs
+# Step 10: Fix asset paths for web (CRITICAL FIX)
+echo "🔧 Fixing asset paths for web deployment..."
+cd build/web
+
+# Ensure assets are accessible
+if [ ! -d "assets" ]; then
+  echo "⚠️ Warning: assets directory not found"
+fi
+
+# Step 11: Create .htaccess for proper routing (if needed)
+cat > .htaccess << 'EOF'
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+EOF
+
+cd ../..
+
+# Step 12: Validate output
+if [ -d "build/web" ] && [ -f "build/web/index.html" ]; then
+  echo "✅ Build successful! Output in build/web"
+  echo "📊 Build directory contents:"
+  ls -lah build/web | head -n 15
 else
-  echo "Build failed: No output in build/web"
+  echo "❌ Build failed: No valid output in build/web"
   exit 1
 fi
+
+echo "🎉 Deployment build complete!"
