@@ -3,7 +3,7 @@ description: Real-Time Energy Monitoring
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"  # Unchanged; supports Dart 3.9
+  sdk: "^3.0.0"  # Unchanged; supports Dart 3.9
 
 dependencies:
   flutter:

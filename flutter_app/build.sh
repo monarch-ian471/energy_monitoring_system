@@ -32,6 +32,15 @@ flutter clean
 echo "📦 Fetching Flutter dependencies..."
 flutter pub get
 
+# Step 6b: Fix SDK version constraint if needed
+echo "🔧 Checking SDK version compatibility..."
+if grep -q "sdk: \">=2.17.0 <3.0.0\"" pubspec.yaml; then
+  echo "⚠️ Updating SDK constraint to Dart 3.x..."
+  sed -i.bak 's/sdk: ">=2.17.0 <3.0.0"/sdk: "^3.0.0"/' pubspec.yaml
+  rm pubspec.yaml.bak 2>/dev/null || true
+  flutter pub get
+fi
+
 # Step 7: Generate localization files (CRITICAL - your app uses l10n)
 echo "🌍 Generating localization files..."
 flutter gen-l10n
@@ -44,7 +53,6 @@ flutter pub run build_runner build --delete-conflicting-outputs
 echo "🚀 Building Flutter web (release mode)..."
 flutter build web \
   --release \
-  --web-renderer canvaskit \
   --base-href "/" \
   --no-tree-shake-icons
 
