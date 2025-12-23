@@ -28,3 +28,12 @@ Uri buildApiUri(String relativePath, [Map<String, String>? queryParameters]) {
         queryParameters: queryParameters,
     );
 }
+
+/// Get HTTP headers including ngrok bypass header
+/// This is required to skip ngrok's interstitial warning page on free tier
+Map<String, String> getApiHeaders() {
+    return {
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
+    };
+}

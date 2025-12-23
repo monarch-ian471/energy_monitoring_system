@@ -8,7 +8,7 @@ class ApiDataSource {
   Future<EnergyData> getCurrentEnergy({int applianceId = 1}) async {
     debugPrint('ApiDataSource.getCurrentEnergy -> ${buildApiUri('energy', {'appliance_id':'$applianceId'})}');
     final response = await http
-      .get(buildApiUri('energy', {'appliance_id': '$applianceId'}));
+      .get(buildApiUri('energy', {'appliance_id': '$applianceId'}), headers: getApiHeaders());
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return EnergyData.fromJson(data);
@@ -20,7 +20,7 @@ class ApiDataSource {
   Future<List<EnergyData>> getEnergyHistory({int applianceId = 1}) async {
     debugPrint('ApiDataSource.getEnergyHistory -> ${buildApiUri('energy/history', {'appliance_id':'$applianceId'})}');
     final response = await http
-      .get(buildApiUri('energy/history', {'appliance_id': '$applianceId'}));
+      .get(buildApiUri('energy/history', {'appliance_id': '$applianceId'}), headers: getApiHeaders());
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final data = json['data'] as List;
