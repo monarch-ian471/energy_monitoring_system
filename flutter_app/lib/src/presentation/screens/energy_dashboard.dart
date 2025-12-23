@@ -122,7 +122,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
       // For web platform, create a download link
       if (kIsWeb) {
         final response =
-            await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+          await http.get(buildApiUri('logs/download/$logType'));
         if (response.statusCode == 200) {
           // For web, we'll use a simple approach - show a message with the data
           // In a real implementation, you'd use dart:html for proper file download
@@ -149,8 +149,8 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
         }
       }
 
-      final response =
-          await http.get(Uri.parse('$apiBaseUrl/logs/download/$logType'));
+        final response =
+          await http.get(buildApiUri('logs/download/$logType'));
       if (response.statusCode == 200) {
         final directory = await getExternalStorageDirectory();
         if (directory == null) {
@@ -184,12 +184,12 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
 
     try {
       // NOTE: server expects `appliance_id` (snake_case)
-      final currentResponse = await http
-          .get(Uri.parse('$apiBaseUrl/energy?appliance_id=$selectedApplianceId'))
+        final currentResponse = await http
+          .get(buildApiUri('energy', {'appliance_id': '$selectedApplianceId'}))
           .timeout(const Duration(seconds: 10));
 
-      final historyResponse = await http
-          .get(Uri.parse('$apiBaseUrl/energy/history?appliance_id=$selectedApplianceId'))
+        final historyResponse = await http
+          .get(buildApiUri('energy/history', {'appliance_id': '$selectedApplianceId'}))
           .timeout(const Duration(seconds: 10));
 
       print('API Response /energy: ${currentResponse.body}');
@@ -282,7 +282,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
 
     try {
       final response = await http
-          .get(Uri.parse('$apiBaseUrl/logs/historical-data?days=$days'))
+          .get(buildApiUri('logs/historical-data', {'days': '$days'}))
           .timeout(const Duration(seconds: 10), onTimeout: () {
         throw Exception('API timeout - Check if server is running');
       });
@@ -357,7 +357,7 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
 
   Future<void> _fetchAppliances() async {
     try {
-      final response = await http.get(Uri.parse('$apiBaseUrl/appliances'));
+      final response = await http.get(buildApiUri('appliances'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
