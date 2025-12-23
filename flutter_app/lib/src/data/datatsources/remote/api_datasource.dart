@@ -6,9 +6,9 @@ import '../../../domain/entities/energy_data.dart';
 
 class ApiDataSource {
   Future<EnergyData> getCurrentEnergy({int applianceId = 1}) async {
-    debugPrint('ApiDataSource.getCurrentEnergy -> $apiBaseUrl/energy?appliance_id=$applianceId');
+    debugPrint('ApiDataSource.getCurrentEnergy -> ${buildApiUri('energy', {'appliance_id':'$applianceId'})}');
     final response = await http
-        .get(Uri.parse('$apiBaseUrl/energy?appliance_id=$applianceId'));
+      .get(buildApiUri('energy', {'appliance_id': '$applianceId'}));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return EnergyData.fromJson(data);
@@ -18,9 +18,9 @@ class ApiDataSource {
   }
 
   Future<List<EnergyData>> getEnergyHistory({int applianceId = 1}) async {
-    debugPrint('ApiDataSource.getEnergyHistory -> $apiBaseUrl/energy/history?appliance_id=$applianceId');
+    debugPrint('ApiDataSource.getEnergyHistory -> ${buildApiUri('energy/history', {'appliance_id':'$applianceId'})}');
     final response = await http
-        .get(Uri.parse('$apiBaseUrl/energy/history?appliance_id=$applianceId'));
+      .get(buildApiUri('energy/history', {'appliance_id': '$applianceId'}));
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final data = json['data'] as List;
