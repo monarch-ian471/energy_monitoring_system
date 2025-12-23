@@ -979,10 +979,11 @@ class _EnergyDashboardState extends ConsumerState<EnergyDashboard>
     }
 
     // Data for the graphical line from 0 to currentWatts
+    // Draw a flat horizontal line at the current watts value across the chart.
     final List<Map<String, dynamic>> zeroToCurrentLine = [
       {
         'timestamp': minTime.toIso8601String(),
-        'watts': 0.0,
+        'watts': currentWattsValue,
       },
       {
         'timestamp': maxTime.toIso8601String(),

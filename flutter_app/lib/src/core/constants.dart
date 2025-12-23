@@ -2,11 +2,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Use a runtime getter so .env values loaded in main.dart are respected.
 String get apiBaseUrl =>
-    dotenv.env['API_BASE_URL']?.trim() ?? 'http://localhost:8000';
+    dotenv.env['API_BASE_URL']?.trim() ?? 'http://192.168.1.140:8000';
 
 /// Build a safe Uri for API endpoints using the configured base URL.
 Uri buildApiUri(String relativePath, [Map<String, String>? queryParameters]) {
-    var base = dotenv.env['API_BASE_URL']?.trim() ?? 'http://localhost:8000';
+    var base = dotenv.env['API_BASE_URL']?.trim() ?? 'http://192.168.1.140:8000';
     // Tolerate common accidental typos like `htto://` and missing scheme.
     if (base.startsWith('htto://')) base = base.replaceFirst('htto://', 'http://');
     if (!base.startsWith('http://') && !base.startsWith('https://')) {
