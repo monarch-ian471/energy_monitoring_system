@@ -190,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Lottie.network(lottieUrl,
+                Lottie.asset(lottieUrl,
                     width: isSmallScreen ? 180 : 300,
                     height: isSmallScreen ? 180 : 300,
                     fit: BoxFit.contain),
